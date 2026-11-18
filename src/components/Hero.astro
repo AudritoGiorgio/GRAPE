@@ -70,7 +70,10 @@ const rp = aerialRoverPoint();
       defaults: { ease: 'none' },
       scrollTrigger: { trigger: root, start: 'top 64px', end: () => '+=' + Math.round(window.innerHeight * 2.4), pin: true, scrub: 0.5, invalidateOnRefresh: true, anticipatePin: 1 },
     });
-    tl.to('.hero-copy', { autoAlpha: 0, y: -40, duration: 0.22 }, 0.04);
+    // the GRAPE title stays through every stage; only the rest of the copy leaves
+    tl.to(['.hero-sub', '.hero-cta', '.hero-status'], { autoAlpha: 0, y: -30, duration: 0.22, stagger: 0.02 }, 0.04);
+    // on the dark camera view it turns light and steps back so it clears the boxes
+    tl.to('.hero-h1', { color: '#F2F3EF', scale: 0.5, transformOrigin: '0% 0%', duration: 0.14, ease: 'power2.out' }, 1.0);
     // phones: the picture sits under the text, so it grows to the full stage as the text leaves
     if (window.matchMedia('(max-width: 767px)').matches) {
       const art = root.querySelector<HTMLElement>('.hero-art')!, copy = root.querySelector<HTMLElement>('.hero-copy')!;
