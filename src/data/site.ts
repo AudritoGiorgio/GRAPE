@@ -6,8 +6,10 @@ export const links = {
   submitResults: 'https://github.com/PIC4SeR/grape-bench/issues/new?template=submit-results.yml',
   protocol: 'https://github.com/PIC4SeR/grape-bench#readme',
   contributeGithub: 'https://github.com/PIC4SeR/grape-bench/blob/main/CONTRIBUTING.md',
-  // TODO: replace with the real Google Form for vineyard partners
-  googleForm: '#google-form-placeholder',
+  // Dataset contributions: a prefilled email for now. Swap in a Google Form URL when it exists.
+  contribute: 'mailto:giorgio_audrito@polito.it?subject=GRAPE%20Dataset%20Contribution',
+  // Paper preprint (arXiv or PDF). Leave empty to hide the link; set a URL and rebuild to show it.
+  preprint: '',
   contactEmail: 'giorgio_audrito@polito.it',
   pic4ser: 'https://pic4ser.polito.it/',
   yanmar: 'https://www.yanmar.com/eu/',

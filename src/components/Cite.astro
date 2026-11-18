@@ -31,16 +31,8 @@ const partners = [
       <p class="mt-5 text-[15px] leading-relaxed text-muted">{paper.authors.join(', ')}</p>
     </div>
     <div class="min-w-0">
-      <div class="flex items-baseline justify-between"><p class="kicker">Cite GRAPE</p><button type="button" id="copy-bib" class="lnk text-[14px]">Copy BibTeX</button></div>
+      <div class="flex items-baseline justify-between gap-6"><p class="kicker">Cite GRAPE</p>{links.preprint && <a class="lnk text-[14px]" href={links.preprint}>Read the preprint ↗</a>}</div>
       <pre id="bibtex" class="mt-4 overflow-x-auto bg-ink p-6 font-mono text-[13px] leading-relaxed text-ground">{paper.bibtex}</pre>
     </div>
   </div>
 </section>
-<script>
-  const btn = document.getElementById('copy-bib')!, pre = document.getElementById('bibtex')!;
-  btn.addEventListener('click', async () => {
-    try { await navigator.clipboard.writeText(pre.textContent ?? ''); btn.textContent = 'Copied'; }
-    catch { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection()!; s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected, press Ctrl+C'; }
-    setTimeout(() => { btn.textContent = 'Copy BibTeX'; }, 2000);
-  });
-</script>

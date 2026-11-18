@@ -52,7 +52,8 @@ Copy it into the benchmark repo (`PIC4SeR/grape-bench`) so the link in `src/data
 
 ## Placeholders still to fill
 
-- Google Form for vineyard partners: `links.googleForm` in `src/data/site.ts`.
+- Dataset contributions: `links.contribute` in `src/data/site.ts` (a prefilled email for now; replace with a form URL).
+- Preprint: `links.preprint` in `src/data/site.ts` (empty hides the link).
 - Partner logos (see above).
 - Hero art: the vineyard scene is generated SVG (`src/lib/grape.ts`). A commissioned render can replace
   `hero-scene.svg` while keeping the rover layer, or replace both.

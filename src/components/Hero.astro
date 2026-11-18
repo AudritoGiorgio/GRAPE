@@ -4,12 +4,12 @@ import { links, paper } from '../data/site';
 const rover = heroRoverSVG();
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 ---
-<section id="top" class="relative">
-  <!-- phones: text above the picture -->
-  <div class="wrap pb-8 pt-10 md:hidden">
-    <h1 class="font-display text-[22vw] font-extrabold leading-[.82] tracking-display">GRAPE</h1>
-    <p class="mt-5 max-w-[24ch] text-[19px] font-medium leading-snug">Powering Autonomous Perception Across the Vineyard Life Cycle</p>
-    <div class="mt-7 flex flex-wrap items-center gap-6">
+<section id="top" class="relative flex flex-col">
+  <!-- one heading and one set of buttons: above the picture on phones, over it from md up -->
+  <div class="hero-copy wrap pb-8 pt-10 md:absolute md:top-[11%] md:z-10 md:w-[52%] md:max-w-none md:p-0">
+    <h1 class="hero-h1 font-display font-extrabold leading-[.82] tracking-display">GRAPE</h1>
+    <p class="hero-sub mt-5 max-w-[24ch] font-medium">Powering Autonomous Perception Across the Vineyard Life Cycle</p>
+    <div class="hero-cta mt-7 flex flex-wrap items-center gap-6 md:gap-7">
       <a class="btn" href="#datasets">Get the dataset</a>
       <a class="lnk" href={links.github}>View on GitHub →</a>
     </div>
@@ -17,17 +17,19 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
   <div class="relative w-full overflow-hidden" style="aspect-ratio:16/9;max-height:calc(100svh - 64px)">
     <img src={base + 'hero-scene.svg'} alt="A Clearpath Husky robot with a sensor mast drives down a vineyard row, ripe grape clusters hanging on both sides" class="absolute inset-0 h-full w-full object-cover" width="1600" height="900" fetchpriority="high" decoding="async" />
     <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" set:html={rover}></svg>
-    <div class="edge-left absolute top-[11%] hidden w-[52%] md:block">
-      <h1 class="font-display font-extrabold leading-[.82] tracking-display" style="font-size:min(11.5vw,21svh);margin-left:-.04em">GRAPE</h1>
-      <p class="mt-[2.2vw] max-w-[24ch] font-medium leading-[1.22]" style="font-size:clamp(17px,min(1.75vw,3.3svh),32px)">Powering Autonomous Perception Across the Vineyard Life Cycle</p>
-      <div class="mt-[2.4vw] flex flex-wrap items-center gap-7">
-        <a class="btn" href="#datasets">Get the dataset</a>
-        <a class="lnk" href={links.github}>View on GitHub →</a>
-      </div>
-    </div>
-    <p class="edge-left absolute bottom-[4.5%] hidden font-mono text-[13px] font-medium md:block">{paper.status}</p>
+    <p class="edge-left absolute bottom-[4.5%] hidden font-mono text-[13px] font-medium md:block">{paper.status}{links.preprint && <> · <a class="lnk" href={links.preprint}>Read the preprint</a></>}</p>
   </div>
 </section>
+<style>
+  .hero-h1 { font-size: 22vw; }
+  .hero-sub { font-size: 19px; line-height: 1.3; }
+  @media (min-width: 768px) {
+    .hero-copy { left: calc(max(0px, (100% - 1240px) / 2) + 40px); }
+    .hero-h1 { font-size: min(11.5vw, 21svh); margin-left: -.04em; }
+    .hero-sub { margin-top: 2.2vw; font-size: clamp(17px, min(1.75vw, 3.3svh), 32px); line-height: 1.22; }
+    .hero-cta { margin-top: 2.4vw; }
+  }
+</style>
 <script>
   import { gsap } from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
