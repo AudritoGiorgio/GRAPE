@@ -3,16 +3,6 @@ import { stats, links } from '../data/site';
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const fmt = (n: number) => n.toLocaleString('en-US');
 ---
-<div class="border-t border-line">
-  <div class="wrap flex flex-col items-center gap-4 py-6 md:py-7">
-    <p class="kicker">Developed by</p>
-    <div class="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 md:gap-x-0">
-      <a href={links.pic4ser} class="block opacity-90 transition-opacity hover:opacity-100 md:px-14"><img src={base + 'logos/pic4ser.png'} alt="Politecnico di Torino, PIC4SeR" class="h-[30px] w-auto md:h-[38px]" width="966" height="193" loading="lazy" /></a>
-      <span class="hidden h-10 w-px bg-line md:block" aria-hidden="true"></span>
-      <a href={links.yanmar} class="block opacity-90 transition-opacity hover:opacity-100 md:px-14"><img src={base + 'logos/yanmar.png'} alt="YANMAR R&D Europe" class="h-[38px] w-auto md:h-[48px]" width="600" height="440" loading="lazy" /></a>
-    </div>
-  </div>
-</div>
 <section aria-label="GRAPE in numbers" class="border-y border-line">
   <div class="wrap grid grid-cols-2 md:grid-cols-5">
     {stats.map((s, i) => (
@@ -23,6 +13,16 @@ const fmt = (n: number) => n.toLocaleString('en-US');
     ))}
   </div>
 </section>
+<div class="border-b border-line">
+  <div class="wrap flex flex-col items-center gap-4 py-6 md:py-7">
+    <p class="kicker">Developed by</p>
+    <div class="flex flex-wrap items-center justify-center gap-x-12 gap-y-4 md:gap-x-0">
+      <a href={links.pic4ser} class="block opacity-90 transition-opacity hover:opacity-100 md:px-14"><img src={base + 'logos/pic4ser.png'} alt="Politecnico di Torino, PIC4SeR" class="h-[30px] w-auto md:h-[38px]" width="966" height="193" loading="lazy" /></a>
+      <span class="hidden h-10 w-px bg-line md:block" aria-hidden="true"></span>
+      <a href={links.yanmar} class="block opacity-90 transition-opacity hover:opacity-100 md:px-14"><img src={base + 'logos/yanmar.png'} alt="YANMAR R&D Europe" class="h-[38px] w-auto md:h-[48px]" width="600" height="440" loading="lazy" /></a>
+    </div>
+  </div>
+</div>
 <script>
   import { gsap } from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';

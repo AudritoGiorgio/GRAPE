@@ -9,27 +9,24 @@
   .copy-wrap pre { padding-right: 76px; }
 </style>
 <script>
-  // A Copy button in the top-right corner of every <pre> on the page.
+  // Copy buttons are rendered in the HTML by Code.astro; this wires them up. Any bare <pre> gets one too.
   for (const pre of Array.from(document.querySelectorAll<HTMLPreElement>('pre'))) {
+    if (pre.parentElement?.classList.contains('copy-wrap')) continue;
     const wrap = document.createElement('div');
-    wrap.className = 'copy-wrap' + (pre.classList.contains('bg-ink') ? ' is-dark' : '');
-    pre.parentNode!.insertBefore(wrap, pre);
-    wrap.appendChild(pre);
-    wrap.style.marginTop = getComputedStyle(pre).marginTop; pre.style.marginTop = '0';
-    const btn = document.createElement('button');
-    btn.type = 'button'; btn.className = 'copy-btn'; btn.textContent = 'Copy';
-    btn.setAttribute('aria-label', 'Copy to clipboard');
-    let t = 0;
-    btn.addEventListener('click', async () => {
-      const text = pre.textContent ?? '';
-      try { await navigator.clipboard.writeText(text); }
-      catch {
-        const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
-        document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
-      }
-      btn.textContent = 'Copied!'; btn.classList.add('is-done');
-      clearTimeout(t); t = window.setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('is-done'); }, 1800);
-    });
-    wrap.appendChild(btn);
+    wrap.className = 'copy-wrap';
+    pre.parentNode!.insertBefore(wrap, pre); wrap.appendChild(pre);
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'copy-btn'; b.textContent = 'Copy'; b.setAttribute('aria-label', 'Copy to clipboard');
+    wrap.appendChild(b);
   }
+  document.addEventListener('click', async (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('.copy-btn'); if (!btn) return;
+    const text = btn.parentElement?.querySelector('pre')?.textContent ?? '';
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+      document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    btn.textContent = 'Copied!'; btn.classList.add('is-done');
+    window.setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('is-done'); }, 1800);
+  });
 </script>

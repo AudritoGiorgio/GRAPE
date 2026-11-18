@@ -1,6 +1,7 @@
 ---
 import { existsSync } from 'node:fs';
 import { paper, links } from '../data/site';
+import Code from './Code.astro';
 // Drop official logos into public/logos/ as pic4ser.svg|png and yanmar.svg|png; they replace the text wordmarks on the next build.
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const logo = (name: string) => {
@@ -32,7 +33,7 @@ const partners = [
     </div>
     <div class="min-w-0">
       <div class="flex items-baseline justify-between gap-6"><p class="kicker">Cite GRAPE</p>{links.preprint && <a class="lnk text-[14px]" href={links.preprint}>Read the preprint ↗</a>}</div>
-      <pre id="bibtex" class="mt-4 overflow-x-auto bg-ink p-6 font-mono text-[13px] leading-relaxed text-ground">{paper.bibtex}</pre>
+      <div class="mt-4"><Code dark text={paper.bibtex} label="Copy BibTeX citation" class="overflow-x-auto bg-ink p-6 font-mono text-[13px] leading-relaxed text-ground" /></div>
     </div>
   </div>
 </section>

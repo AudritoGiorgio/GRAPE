@@ -1,0 +1,9 @@
+---
+// A <pre> block with a server-rendered Copy button (works in raw HTML; the click handler lives in CopyButtons.astro).
+interface Props { text: string; class?: string; dark?: boolean; label?: string }
+const { text, class: cls = '', dark = false, label = 'Copy to clipboard' } = Astro.props;
+---
+<div class:list={['copy-wrap', { 'is-dark': dark }]}>
+  <pre class={cls}>{text}</pre>
+  <button type="button" class="copy-btn" aria-label={label}>Copy</button>
+</div>

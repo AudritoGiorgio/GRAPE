@@ -63,16 +63,21 @@ export function renderTable(board: Board, taskKey: string, submitHref: string, o
     const name = r.e.link ? `<a class="font-semibold underline decoration-line underline-offset-4 hover:decoration-ink" href="${esc(r.e.link)}">${esc(r.e.method)}</a>` : `<span class="font-semibold">${esc(r.e.method)}</span>`;
     const tag = `<span class="ml-2 font-mono text-[11px] text-muted">${r.e.baseline ? 'baseline' : esc(r.e.by)}</span>`;
     const tog = `<button type="button" class="lb-tog ml-3 font-mono text-[11px] text-accent underline underline-offset-2" data-i="${i}" aria-expanded="${on}">${on ? 'hide sessions' : 'show sessions'}</button>`;
-    h += `<tbody class="lb-entry"><tr class="border-b border-line${i === 0 ? ' bg-accent-soft' : ''}"><td class="px-3 py-3.5 font-mono text-xs text-muted">${i + 1}</td><td class="px-3 py-3.5 text-left whitespace-nowrap">${name}${tag}${tog}</td>${cells}<td class="px-3 py-1.5">${spark(r.e.sessions.map((s) => s[k]), rm)}</td></tr>`;
+    h += `<tbody class="lb-entry"><tr class="lb-method border-t-2 border-ink text-[16px]${i === 0 ? ' bg-accent-soft' : ''}"><td class="px-3 py-3.5 font-mono text-xs text-muted">${i + 1}</td><td class="px-3 py-3.5 text-left whitespace-nowrap">${name}${tag}${tog}</td>${cells}<td class="px-3 py-1.5">${spark(r.e.sessions.map((s) => s[k]), rm)}</td></tr>`;
     if (on) {
       const sb = t.metrics.map((m, c) => {
         const vs = r.e.sessions.map((s) => s[c]);
         return m.better === 'lower' ? Math.min(...vs) : Math.max(...vs);
       });
+      const kv = r.e.sessions.map((s) => s[k]);
+      const lo = Math.min(...kv), hi = Math.max(...kv), base = lo - (hi - lo || 1) * 0.5;
       r.e.sessions.forEach((sv, si) => {
-        const s = SES[si];
+        const s = SES[si], last = si === r.e.sessions.length - 1;
         const sc = sv.map((v, c) => `<td class="px-3 py-2 text-right${v === sb[c] ? ' font-semibold text-ink' : ''}">${fmt(t.metrics[c], v)}</td>`).join('');
-        h += `<tr class="border-b border-line/60 text-[13px] text-muted${si === r.e.sessions.length - 1 ? ' border-line' : ''}"><td></td><td class="py-2 pl-6 pr-3 text-left whitespace-nowrap"><span class="inline-block h-2 w-2 align-middle" style="background:${stageColor(si)}"></span><span class="ml-2 font-mono text-[12px] text-ink">${esc(s ? s.short : board.sessions[si])}</span><span class="ml-2">${esc(s ? s.stage : '')}</span></td>${sc}<td></td></tr>`;
+        const w = ((kv[si] - base) / (hi - base)) * 100;
+        const top = kv[si] === sb[k];
+        const bar = `<td class="py-2 pl-3 pr-3"><span class="flex items-center gap-2"><span class="relative block h-[10px] w-[96px] bg-alt"><span class="absolute inset-y-0 left-0 block" style="width:${w.toFixed(1)}%;background:${stageColor(si)}"></span></span><span class="font-mono text-[11px]${top ? ' font-semibold text-ink' : ''}">${fmt(rm, kv[si])}</span></span></td>`;
+        h += `<tr class="lb-ses text-[13px] text-muted${last ? ' border-b border-line' : ''}"><td></td><td class="border-l-2 border-line py-2 pl-5 pr-3 text-left whitespace-nowrap"><span class="inline-block h-2 w-2 align-middle" style="background:${stageColor(si)}"></span><span class="ml-2 font-mono text-[12px] text-ink">${esc(s ? s.short : board.sessions[si])}</span><span class="ml-2">${esc(s ? s.stage : '')}</span></td>${sc}${bar}</tr>`;
       });
     }
     h += '</tbody>';
