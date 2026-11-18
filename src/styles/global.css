@@ -15,6 +15,7 @@
   .h2 { @apply font-display font-bold tracking-head text-[34px] leading-[1.04] md:text-[52px]; }
   .btn { @apply inline-flex items-center gap-2 bg-accent px-6 py-4 text-[15px] font-semibold leading-none text-white transition-colors hover:bg-accent-dark; }
   .lnk { @apply inline-flex items-center gap-1 text-[15px] font-semibold text-ink underline decoration-1 underline-offset-[6px] hover:decoration-2; }
+  .btn-2 { @apply inline-flex items-center gap-2 border-2 border-ink bg-white px-6 py-[14px] text-[15px] font-semibold leading-none text-ink transition-colors hover:bg-ink hover:text-white; }
 }
 .tabular { font-variant-numeric: tabular-nums; }
 [hidden] { display: none !important; }
