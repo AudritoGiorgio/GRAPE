@@ -1,14 +1,12 @@
 ---
 import { heroRoverSVG } from '../lib/grape';
-import { aerialRoverPoint } from '../lib/heroArt';
 import { links, paper } from '../data/site';
 const rover = heroRoverSVG();
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
-const rp = aerialRoverPoint();
 ---
-<!-- Scroll-zoom hero: the vineyard from above → down into the row with the Husky → the rover's camera view.
-     Reduced motion (or no JS) shows the aerial view only. -->
-<section id="top" class="relative" data-rx={rp.x} data-ry={rp.y}>
+<!-- Scroll hero: the row with the Husky → the rover's camera view with detections. GRAPE stays throughout.
+     Reduced motion (or no JS) shows the row scene only. -->
+<section id="top" class="relative">
   <div class="hero-stage relative flex flex-col overflow-hidden bg-alt">
     <div class="hero-copy wrap relative z-10 pb-6 pt-10 md:absolute md:top-[13%] md:w-[46%] md:max-w-none md:p-0">
       <h1 class="hero-h1 font-display font-extrabold leading-[.82] tracking-display">GRAPE</h1>
@@ -20,14 +18,13 @@ const rp = aerialRoverPoint();
       <p class="hero-status mt-8 font-mono text-[13px] font-medium text-muted md:mt-[6vh]">{paper.status}{links.preprint && <> · <a class="lnk" href={links.preprint}>Read the preprint</a></>}</p>
     </div>
     <div class="hero-art relative min-h-0 flex-1 md:absolute md:inset-0">
-      <img src={base + 'hero-aerial.svg'} alt="Vineyard rows seen from above, berries turning from green to dark purple along each row, the rover driving one aisle" class="layer l-aerial" width="1600" height="900" fetchpriority="high" decoding="async" />
-      <div class="layer l-scene" aria-hidden="true">
-        <img src={base + 'hero-scene.svg'} alt="" class="absolute inset-0 h-full w-full object-cover" width="1600" height="900" decoding="async" />
+      <div class="layer l-scene">
+        <img src={base + 'hero-scene.svg'} alt="The Husky rover driving down a vineyard row between ripening grape clusters" class="absolute inset-0 h-full w-full object-cover" width="1600" height="900" fetchpriority="high" decoding="async" />
         <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" class="pointer-events-none absolute inset-0 h-full w-full" set:html={rover}></svg>
       </div>
       <div class="layer l-cam" aria-hidden="true">
         <img src={base + 'hero-camera.svg'} alt="" class="absolute inset-0 h-full w-full object-cover" style="object-position:70% 40%" width="1600" height="900" decoding="async" />
-        <p class="cam-cap absolute bottom-[5%] left-[5%] font-mono text-[12px] text-[#C9C2B3] md:text-[13px]">What the rover sees · detection and tracking</p>
+        <p class="cam-cap absolute bottom-[5%] left-[5%] font-mono text-[12px] text-muted md:text-[13px]">What the rover sees · detection and tracking</p>
       </div>
     </div>
   </div>
@@ -35,13 +32,11 @@ const rp = aerialRoverPoint();
 <style>
   .hero-stage { height: calc(100svh - 64px); min-height: 560px; }
   .layer { position: absolute; inset: 0; width: 100%; height: 100%; }
-  img.layer { object-fit: cover; object-position: 88% 50%; }
-  .l-scene, .l-cam { opacity: 0; visibility: hidden; }
+  .l-cam { opacity: 0; visibility: hidden; }
   .hero-h1 { font-size: 22vw; }
   .hero-sub { font-size: 19px; line-height: 1.3; }
   @media (min-width: 768px) {
     .hero-stage { min-height: 600px; }
-    img.layer { object-position: 100% 50%; }
     .hero-copy { left: calc(max(0px, (100% - 1240px) / 2) + 40px); }
     .hero-h1 { font-size: min(11.5vw, 21svh); margin-left: -.04em; }
     .hero-sub { margin-top: 2.2vw; font-size: clamp(17px, min(1.75vw, 3.3svh), 32px); line-height: 1.22; }
@@ -53,27 +48,14 @@ const rp = aerialRoverPoint();
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
   const root = document.getElementById('top')!;
-  const aerial = root.querySelector<HTMLImageElement>('.l-aerial')!;
-  const RX = Number(root.dataset.rx), RY = Number(root.dataset.ry);
-
-  // where the rover sits inside the cropped aerial image, as a transform origin
-  function origin() {
-    const w = aerial.clientWidth, h = aerial.clientHeight, s = Math.max(w / 1600, h / 900);
-    const pos = getComputedStyle(aerial).objectPosition.split(' ').map((v) => parseFloat(v) / 100);
-    const ox = (w - 1600 * s) * pos[0] + RX * s, oy = (h - 900 * s) * (pos[1] ?? 0.5) + RY * s;
-    return `${ox.toFixed(0)}px ${oy.toFixed(0)}px`;
-  }
-
   const mm = gsap.matchMedia();
   mm.add('(prefers-reduced-motion: no-preference)', () => {
     const tl = gsap.timeline({
       defaults: { ease: 'none' },
-      scrollTrigger: { trigger: root, start: 'top 64px', end: () => '+=' + Math.round(window.innerHeight * 2.4), pin: true, scrub: 0.5, invalidateOnRefresh: true, anticipatePin: 1 },
+      scrollTrigger: { trigger: root, start: 'top 64px', end: () => '+=' + Math.round(window.innerHeight * 1.8), pin: true, scrub: 0.5, invalidateOnRefresh: true, anticipatePin: 1 },
     });
     // the GRAPE title stays through every stage; only the rest of the copy leaves
     tl.to(['.hero-sub', '.hero-cta', '.hero-status'], { autoAlpha: 0, y: -30, duration: 0.22, stagger: 0.02 }, 0.04);
-    // on the dark camera view it turns light and steps back so it clears the boxes
-    tl.to('.hero-h1', { color: '#F2F3EF', scale: 0.5, transformOrigin: '0% 0%', duration: 0.14, ease: 'power2.out' }, 1.0);
     // phones: the picture sits under the text, so it grows to the full stage as the text leaves
     if (window.matchMedia('(max-width: 767px)').matches) {
       const art = root.querySelector<HTMLElement>('.hero-art')!, copy = root.querySelector<HTMLElement>('.hero-copy')!;
@@ -81,12 +63,12 @@ const rp = aerialRoverPoint();
       tl.to(art, { top: 0, duration: 0.26 }, 0.04);
     }
     tl
-      .fromTo(aerial, { scale: 1, transformOrigin: origin }, { scale: 7, transformOrigin: origin, duration: 0.5, ease: 'power2.in' }, 0)
-      .to(aerial, { autoAlpha: 0, duration: 0.12 }, 0.4)
-      .fromTo('.l-scene', { autoAlpha: 0, scale: 1.3 }, { autoAlpha: 1, scale: 1, duration: 0.32, ease: 'power2.out' }, 0.38)
-      .fromTo('#hero-rover', { y: 0, scale: 1 }, { y: 30, scale: 1.08, transformOrigin: '50% 100%', duration: 0.4 }, 0.62)
-      .fromTo('.l-cam', { autoAlpha: 0, scale: 1.1 }, { autoAlpha: 1, scale: 1, duration: 0.14, ease: 'power2.out' }, 1.0)
-      .fromTo('.cam-cap', { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.1 }, 1.1)
+      .fromTo('#hero-rover', { y: 0, scale: 1 }, { y: 30, scale: 1.08, transformOrigin: '50% 100%', duration: 0.5 }, 0.1)
+      .to('.l-scene', { scale: 1.25, transformOrigin: '62% 55%', duration: 0.5, ease: 'power2.in' }, 0.2)
+      .to('.l-scene', { autoAlpha: 0, duration: 0.14 }, 0.6)
+      .fromTo('.l-cam', { autoAlpha: 0, scale: 1.1 }, { autoAlpha: 1, scale: 1, duration: 0.18, ease: 'power2.out' }, 0.58)
+      .to('.hero-h1', { scale: 0.5, transformOrigin: '0% 0%', duration: 0.16, ease: 'power2.out' }, 0.6)
+      .fromTo('.cam-cap', { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.1 }, 0.72)
       .to({}, { duration: 0.3 });
     return () => tl.scrollTrigger?.kill();
   });
