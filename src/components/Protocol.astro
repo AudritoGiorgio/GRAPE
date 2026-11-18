@@ -57,37 +57,44 @@ R.push(`<rect x="196" y="56" width="7" height="96" fill="${C.al}"/><rect x="266"
 R.push(sensor(199, 56) + lab(184, 60, 'Cameras', 'end'));
 R.push(sensor(269, 86) + lab(286, 90, 'GNSS'));
 R.push(sensor(330, 144) + lab(346, 136, 'IMU'));
-// top view
+// top view: the rover drives between two rows; each camera looks sideways at its own row
 const T = 280;
 R.push(`<text x="20" y="${T}" font-size="11" fill="${C.muted}" font-family="Red Hat Mono, monospace">Top view</text>`);
-const by = T + 50; // body top
-for (const [x, y] of [[140, by - 16], [320, by - 16], [140, by + 150], [320, by + 150]]) R.push(`<rect x="${x}" y="${y}" width="70" height="20" fill="${C.ink}"/>`);
-R.push(`<rect x="130" y="${by}" width="270" height="154" fill="#F2F3EF" stroke="${C.ink}" stroke-width="2"/>`);
-R.push(`<rect x="190" y="${by + 30}" width="150" height="94" fill="none" stroke="${C.line}" stroke-width="1.5"/>`);
-// heading arrow
 R.push(`<line x1="300" y1="${T - 4}" x2="380" y2="${T - 4}" stroke="${C.muted}" stroke-width="1.5"/><polygon points="380,${T - 9} 390,${T - 4} 380,${T + 1}" fill="${C.muted}"/><text x="296" y="${T}" text-anchor="end" font-size="11" fill="${C.muted}">driving direction</text>`);
-// vine row along the bottom
-const rowTop = by + 236;
-R.push(`<rect x="20" y="${rowTop}" width="480" height="18" fill="${C.rowOn}"/>`);
-for (let x = 30; x < 500; x += 40) R.push(`<rect x="${x}" y="${rowTop - 2}" width="3" height="22" fill="#6E5A3C"/>`);
-R.push(`<text x="500" y="${rowTop + 36}" text-anchor="end" font-size="11" fill="${C.muted}">vine row (grape side)</text>`);
-// crossbar carrying the cameras
+const PX = 100; // px per metre for the camera distances
+const vineRow = (y: number, label: string, ly: number) => {
+  R.push(`<rect x="20" y="${y}" width="480" height="18" fill="${C.rowOn}"/>`);
+  for (let x = 30; x < 500; x += 40) R.push(`<rect x="${x}" y="${y - 2}" width="3" height="22" fill="#6E5A3C"/>`);
+  R.push(`<text x="500" y="${ly}" text-anchor="end" font-size="11" fill="${C.muted}">${label}</text>`);
+};
+const rowA = T + 34;                 // vine row on the rover's left
+const d435 = rowA + 18 + 0.8 * PX;   // D435, 0.8 m from the left row
+const by = d435 + 14;                // body top
+const bh = 154;
+const d405 = by + bh + 22;           // D405 on the right end of the bar
+const rowB = d405 + 0.5 * PX;        // vine row on the rover's right
+vineRow(rowA, 'vine row, left side', rowA - 8);
+vineRow(rowB, 'vine row, right side', rowB + 36);
+for (const [x, y] of [[140, by - 16], [320, by - 16], [140, by + bh - 4], [320, by + bh - 4]]) R.push(`<rect x="${x}" y="${y}" width="70" height="20" fill="${C.ink}"/>`);
+R.push(`<rect x="130" y="${by}" width="270" height="${bh}" fill="#F2F3EF" stroke="${C.ink}" stroke-width="2"/>`);
+R.push(`<rect x="190" y="${by + 30}" width="150" height="94" fill="none" stroke="${C.line}" stroke-width="1.5"/>`);
+// crossbar carrying the cameras, sticking out on both sides
 const cx = 212;
-R.push(`<rect x="${cx - 4}" y="${by - 6}" width="8" height="${rowTop - by - 42}" fill="${C.al}"/>`);
-const d435 = by + 14, d405 = rowTop - 48;
-// fields of view towards the row
-R.push(`<polygon points="${cx},${d435} ${cx - 62},${rowTop} ${cx + 62},${rowTop}" fill="${C.train}" opacity=".08"/>`);
-R.push(`<polygon points="${cx},${d405} ${cx - 40},${rowTop} ${cx + 40},${rowTop}" fill="${C.train}" opacity=".16"/>`);
+R.push(`<rect x="${cx - 4}" y="${d435 - 6}" width="8" height="${d405 - d435 + 12}" fill="${C.al}"/>`);
+// fields of view: D435 outwards to the left row, D405 outwards to the right row
+R.push(`<polygon points="${cx},${d435} ${cx - 58},${rowA + 18} ${cx + 58},${rowA + 18}" fill="${C.train}" opacity=".14"/>`);
+R.push(`<polygon points="${cx},${d405} ${cx - 40},${rowB} ${cx + 40},${rowB}" fill="${C.train}" opacity=".14"/>`);
 R.push(sensor(cx, d435, C.train) + lab(cx + 16, d435 + 4, 'D435'));
-R.push(sensor(cx, d405, C.train) + lab(cx - 16, d405 + 4, 'D405', 'end'));
+R.push(sensor(cx, d405, C.train) + lab(cx + 16, d405 + 4, 'D405'));
 // distance dimensions
-const dim = (x: number, y1: number, t: string) => `<g stroke="${C.muted}"><line x1="${x}" y1="${y1}" x2="${x}" y2="${rowTop}"/><line x1="${x - 4}" y1="${y1}" x2="${x + 4}" y2="${y1}"/><line x1="${x - 4}" y1="${rowTop}" x2="${x + 4}" y2="${rowTop}"/></g><text x="${x - 6}" y="${(y1 + rowTop) / 2 + 4}" text-anchor="end" font-size="12" fill="${C.ink}" font-family="Red Hat Mono, monospace">${t}</text>`;
-R.push(dim(96, d435, '0.8 m'), dim(142, d405, '0.5 m'));
+const dim = (x: number, y1: number, y2: number, t: string) => `<g stroke="${C.muted}"><line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}"/><line x1="${x - 4}" y1="${y1}" x2="${x + 4}" y2="${y1}"/><line x1="${x - 4}" y1="${y2}" x2="${x + 4}" y2="${y2}"/></g><text x="${x - 6}" y="${(y1 + y2) / 2 + 4}" text-anchor="end" font-size="12" fill="${C.ink}" font-family="Red Hat Mono, monospace">${t}</text>`;
+R.push(dim(110, rowA + 18, d435, '0.8 m'), dim(110, d405, rowB, '0.5 m'));
+R.push(`<line x1="110" y1="${d435}" x2="${cx - 8}" y2="${d435}" stroke="${C.line}" stroke-dasharray="3 3"/><line x1="110" y1="${d405}" x2="${cx - 8}" y2="${d405}" stroke="${C.line}" stroke-dasharray="3 3"/>`);
 // GNSS pair and IMU
-R.push(sensor(300, by - 26) + lab(316, by - 22, 'GNSS left'));
-R.push(sensor(372, by + 128) + lab(356, by + 132, 'GNSS right', 'end'));
-R.push(sensor(300, by + 76) + lab(316, by + 80, 'IMU'));
-const roverH = rowTop + 46;
+R.push(sensor(372, by + 22) + lab(356, by + 26, 'GNSS left', 'end'));
+R.push(sensor(372, by + bh - 22) + lab(356, by + bh - 18, 'GNSS right', 'end'));
+R.push(sensor(300, by + 77) + lab(316, by + 81, 'IMU'));
+const roverH = rowB + 48;
 ---
 <section id="protocol" class="border-t border-line py-24 md:py-36">
   <div class="wrap">
@@ -109,13 +116,13 @@ const roverH = rowTop + 46;
         <figcaption class="mt-4 text-[14px] leading-relaxed text-muted">Bird's-eye view of the vineyard in Agliè. Rows are 3 m apart and 120 m long, and GRAPE-Track uses rows 2 and 10. Section positions are approximate, after Fig. 3 of the paper.</figcaption>
       </figure>
       <figure class="grid min-w-0 gap-10 border-t border-ink pt-8 md:grid-cols-[minmax(0,520px)_1fr] md:gap-16">
-        <svg viewBox={`0 0 520 ${roverH}`} class="w-full" role="img" aria-label="Side and top view of the Clearpath Husky A200. A mast holds two RealSense cameras facing the vine row: the D435 on the far side at about 0.8 metres from the row and the D405 on the near side at about 0.5 metres. A dual-antenna RTK GNSS sits on the left front and right rear, and the IMU is in the centre." font-family="Red Hat Text, sans-serif" set:html={R.join('')}></svg>
+        <svg viewBox={`0 0 520 ${roverH}`} class="w-full" role="img" aria-label="Side and top view of the Clearpath Husky A200. A bar across the rover holds two RealSense cameras looking outwards to both sides: the D435 at about 0.8 metres from the left row and the D405 at about 0.5 metres from the right row. A dual-antenna RTK GNSS sits on the left front and right rear, and the IMU is in the centre." font-family="Red Hat Text, sans-serif" set:html={R.join('')}></svg>
         <figcaption class="min-w-0 self-center">
           <p class="font-display text-[24px] font-bold tracking-head">Clearpath Husky A200</p>
-          <p class="mt-3 text-[15px] leading-relaxed text-muted">The rover drives the grape side of each row. A mast puts both cameras level with the fruit zone. Layout after Fig. 2 of the paper.</p>
+          <p class="mt-3 text-[15px] leading-relaxed text-muted">The rover drives between two rows. A bar across it carries both cameras at fruit height, each looking outwards at its own row. Layout after Fig. 2 of the paper.</p>
           <dl class="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 border-t border-line pt-5 text-[14px]">
-            <dt class="font-semibold">RealSense D435</dt><dd class="text-muted">RGB-D, 640 × 480 at 30 fps, about 0.8 m from the row</dd>
-            <dt class="font-semibold">RealSense D405</dt><dd class="text-muted">Close-range RGB-D, 640 × 480 at 30 fps, about 0.5 m from the row</dd>
+            <dt class="font-semibold">RealSense D435</dt><dd class="text-muted">RGB-D, 640 × 480 at 30 fps, looks left, about 0.8 m from the row</dd>
+            <dt class="font-semibold">RealSense D405</dt><dd class="text-muted">Close-range RGB-D, 640 × 480 at 30 fps, looks right, about 0.5 m from the row</dd>
             <dt class="font-semibold">Duro RTK GNSS</dt><dd class="text-muted">Dual antenna, position and heading at 5 Hz</dd>
             <dt class="font-semibold">3DM-GX5 AHRS</dt><dd class="text-muted">Orientation at 100 Hz</dd>
           </dl>
