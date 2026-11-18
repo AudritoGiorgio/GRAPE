@@ -2,6 +2,8 @@
 import { existsSync } from 'node:fs';
 import { paper, links } from '../data/site';
 import Code from './Code.astro';
+import { citations } from '../lib/cite';
+const cites = citations(paper);
 // Drop official logos into public/logos/ as pic4ser.svg|png and yanmar.svg|png; they replace the text wordmarks on the next build.
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const logo = (name: string) => {
@@ -29,11 +31,31 @@ const partners = [
   <div class="wrap mt-16 grid gap-14 md:grid-cols-[1fr_1.2fr]">
     <div>
       <p class="kicker">Authors</p>
-      <p class="mt-5 text-[15px] leading-relaxed text-muted">{paper.authors.join(', ')}</p>
+      <p class="mt-5 text-[15px] leading-relaxed text-muted">{paper.authors.map((a) => `${a.given} ${a.family}`).join(', ')}</p>
     </div>
     <div class="min-w-0">
       <div class="flex items-baseline justify-between gap-6"><p class="kicker">Cite GRAPE</p>{links.preprint && <a class="lnk text-[14px]" href={links.preprint}>Read the preprint ↗</a>}</div>
-      <div class="mt-4"><Code dark text={paper.bibtex} label="Copy BibTeX citation" class="overflow-x-auto bg-ink p-6 font-mono text-[13px] leading-relaxed text-ground" /></div>
+      <div class="mt-4 flex flex-wrap gap-x-5 gap-y-2 border-b border-line" role="tablist" aria-label="Citation format" id="cite-tabs">
+        {cites.map((c, i) => (
+          <button type="button" role="tab" id={`cite-tab-${c.id}`} aria-controls={`cite-${c.id}`} aria-selected={i === 0 ? 'true' : 'false'} data-c={c.id}
+            class="-mb-px border-b-2 border-transparent py-2 text-[14px] font-semibold text-muted aria-selected:border-accent aria-selected:text-ink">{c.label}</button>
+        ))}
+      </div>
+      {cites.map((c, i) => (
+        <div class="cite-panel mt-4" id={`cite-${c.id}`} role="tabpanel" aria-labelledby={`cite-tab-${c.id}`} hidden={i !== 0}>
+          <Code dark text={c.text} label={`Copy ${c.label} citation`} class={`overflow-x-auto bg-ink p-6 font-mono text-[13px] leading-relaxed text-ground ${c.id === 'bibtex' || c.id === 'ris' ? '' : 'whitespace-pre-wrap'}`} />
+        </div>
+      ))}
     </div>
   </div>
 </section>
+<script>
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('#cite-tabs [role=tab]'));
+  tabs.forEach((t) => t.addEventListener('click', () => {
+    tabs.forEach((x) => {
+      const on = x === t;
+      x.setAttribute('aria-selected', String(on));
+      document.getElementById(`cite-${x.dataset.c}`)!.hidden = !on;
+    });
+  }));
+</script>

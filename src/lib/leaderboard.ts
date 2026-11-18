@@ -36,8 +36,8 @@ function spark(vals: number[], m: Metric): string {
   return `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(label)}"><polyline points="${line}" fill="none" stroke="#5B615D" stroke-width="1.4"/>${dots}</svg>`;
 }
 
-/** open: indices of entries whose session rows are expanded (rank order). null = all open. */
-export function renderTable(board: Board, taskKey: string, submitHref: string, open: Set<number> | null = null): string {
+/** open: indices of entries whose session rows are expanded (rank order). Default: all collapsed. */
+export function renderTable(board: Board, taskKey: string, submitHref: string, open: Set<number> = new Set()): string {
   const t = board.tasks[taskKey];
   const rows = t.entries.map((e) => ({ e, v: overall(e, t) }));
   const k = t.rankBy, rm = t.metrics[k];
@@ -55,14 +55,14 @@ export function renderTable(board: Board, taskKey: string, submitHref: string, o
   }).join('');
   let h = `<thead><tr class="text-[11px] font-semibold text-muted border-b border-line"><th scope="col" class="px-3 py-3 text-left w-10">#</th><th scope="col" class="px-3 py-3 text-left">Method</th>${head}<th scope="col" class="px-3 py-3 text-left">${esc(rm.label)}, Jun → Oct</th></tr></thead>`;
   rows.forEach((r, i) => {
-    const on = open === null || open.has(i);
+    const on = open.has(i);
     const cells = r.v.map((v, c) => {
       const strong = rows.length > 1 && v === best[c];
       return `<td class="px-3 py-3.5 text-right${strong ? ' font-bold' : ''}">${fmt(t.metrics[c], v)}</td>`;
     }).join('');
     const name = r.e.link ? `<a class="font-semibold underline decoration-line underline-offset-4 hover:decoration-ink" href="${esc(r.e.link)}">${esc(r.e.method)}</a>` : `<span class="font-semibold">${esc(r.e.method)}</span>`;
     const tag = `<span class="ml-2 font-mono text-[11px] text-muted">${r.e.baseline ? 'baseline' : esc(r.e.by)}</span>`;
-    const tog = `<button type="button" class="lb-tog ml-3 font-mono text-[11px] text-accent underline underline-offset-2" data-i="${i}" aria-expanded="${on}">${on ? 'hide sessions' : 'show sessions'}</button>`;
+    const tog = `<button type="button" class="lb-tog ml-4 inline-flex items-center gap-1 border border-accent px-2 py-1 align-middle text-[12px] font-semibold ${on ? 'bg-accent text-white' : 'text-accent hover:bg-accent-soft'}" data-i="${i}" aria-expanded="${on}">${on ? 'Hide sessions ▴' : `Show ${r.e.sessions.length} sessions ▾`}</button>`;
     h += `<tbody class="lb-entry"><tr class="lb-method border-t-2 border-ink text-[16px]${i === 0 ? ' bg-accent-soft' : ''}"><td class="px-3 py-3.5 font-mono text-xs text-muted">${i + 1}</td><td class="px-3 py-3.5 text-left whitespace-nowrap">${name}${tag}${tog}</td>${cells}<td class="px-3 py-1.5">${spark(r.e.sessions.map((s) => s[k]), rm)}</td></tr>`;
     if (on) {
       const sb = t.metrics.map((m, c) => {

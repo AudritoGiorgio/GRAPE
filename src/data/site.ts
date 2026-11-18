@@ -18,21 +18,14 @@ export const links = {
 export const paper = {
   title: 'GRAPE: A multi-season vineyard image dataset for grape cluster detection and tracking',
   status: 'Dataset paper under review',
+  year: 2026,
+  note: 'Under review',
+  key: 'audrito2026grape',
+  // add when published: journal: '...', doi: '10....',
   authors: [
-    'Giorgio Audrito', 'Marco Ambrosio', 'Alessandro Navone', 'Luigi Mazzara', 'Mauro Martini',
-    'Alfredo Argiolas', 'Amir Gamahdrid Iualè', 'George Jose Pollayil', 'Alessandro Innocenti', 'Marcello Chiaberge',
-  ],
-  bibtex: `@article{audrito2026grape,
-  title   = {GRAPE: A multi-season vineyard image dataset
-             for grape cluster detection and tracking},
-  author  = {Audrito, Giorgio and Ambrosio, Marco and
-             Navone, Alessandro and Mazzara, Luigi and
-             Martini, Mauro and Argiolas, Alfredo and
-             Gamahdrid Iual{\\\`e}, Amir and Pollayil, George Jose and
-             Innocenti, Alessandro and Chiaberge, Marcello},
-  year    = {2026},
-  note    = {Under review}
-}`,
+    ['Giorgio', 'Audrito'], ['Marco', 'Ambrosio'], ['Alessandro', 'Navone'], ['Luigi', 'Mazzara'], ['Mauro', 'Martini'],
+    ['Alfredo', 'Argiolas'], ['Amir', 'Gamahdrid Iualè'], ['George Jose', 'Pollayil'], ['Alessandro', 'Innocenti'], ['Marcello', 'Chiaberge'],
+  ].map(([given, family]) => ({ given, family })),
 };
 
 export const stats = [

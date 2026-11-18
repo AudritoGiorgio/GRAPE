@@ -1,16 +1,10 @@
 ---
 import { links } from '../data/site';
-const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const items = [['Problem', '#problem'], ['Season', '#season'], ['Datasets', '#datasets'], ['Leaderboard', '#leaderboard'], ['Get involved', '#get-involved'], ['Cite', '#cite']];
 ---
 <header id="nav" class="sticky top-0 z-40 border-b border-transparent bg-ground transition-colors">
   <div class="wrap flex h-16 items-center gap-8">
-    <div class="flex items-center gap-3 sm:gap-4">
-      <a href={links.pic4ser} class="block shrink-0" aria-label="Politecnico di Torino, PIC4SeR"><img src={base + 'logos/pic4ser.png'} alt="" class="h-[18px] w-auto sm:h-[26px]" width="966" height="193" /></a>
-      <a href={links.yanmar} class="block shrink-0" aria-label="YANMAR R&D Europe"><img src={base + 'logos/yanmar.png'} alt="" class="h-5 w-auto sm:h-[28px]" width="600" height="440" /></a>
-      <span class="h-6 w-px bg-line" aria-hidden="true"></span>
-      <a href="#top" class="font-display text-xl font-extrabold tracking-display">GRAPE</a>
-    </div>
+    <a href="#top" class="font-display text-xl font-extrabold tracking-display">GRAPE</a>
     <nav aria-label="Sections" class="ml-auto hidden gap-7 text-[14px] text-muted lg:flex">
       {items.map(([l, h]) => <a href={h} class="hover:text-ink">{l}</a>)}
     </nav>

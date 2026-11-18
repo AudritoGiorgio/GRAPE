@@ -7,10 +7,10 @@ import Code from './Code.astro';
     <p class="kicker">The data</p>
     <h2 class="h2 mt-4">Three datasets, one season</h2>
     <p class="mt-5 max-w-[62ch] text-[17px] leading-relaxed text-muted">All three are open on Zenodo under CC BY 4.0. The training and evaluation code is on GitHub under the MIT licence.</p>
-    <p class="mt-10 font-mono text-[13px] text-muted">Select a dataset to inspect its folder schema and quick start below.</p>
+    <p class="mt-10 font-mono text-[13px] text-muted">Press a dataset to open its folder schema and quick start.</p>
     <div class="mt-4 grid border-t border-ink md:grid-cols-3" role="tablist" aria-label="Datasets">
       {datasets.map((d, i) => (
-        <article class={`ds-col group relative flex min-w-0 cursor-pointer flex-col gap-5 border-line px-5 py-7 transition-colors md:px-7 ${i > 0 ? 'border-t md:border-l md:border-t-0' : ''} ${i === 0 ? 'is-on' : ''}`} data-i={i}>
+        <article class={`ds-col group relative flex min-w-0 cursor-pointer flex-col gap-5 border-line px-5 py-7 transition-colors md:px-7 ${i > 0 ? 'border-t md:border-l md:border-t-0' : ''} `} data-i={i}>
           <span class="ds-bar absolute inset-x-0 -top-px h-[5px] bg-accent"></span>
           <h3 class="font-display text-[28px] font-bold leading-none tracking-head">{d.name}</h3>
           <p class="min-h-[3em] text-[15px] leading-relaxed text-muted">{d.role}</p>
@@ -20,14 +20,14 @@ import Code from './Code.astro';
           <div class="mt-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-4 pt-2">
             <a class="ds-doi lnk text-[14px]" href={`https://doi.org/${d.doi}`} target="_blank" rel="noopener">Open on Zenodo ↗</a>
           </div>
-          <button type="button" role="tab" id={`ds-tab-${d.id}`} class="ds-toggle flex w-full items-center justify-between border border-ink px-4 py-3 text-left text-[14px] font-semibold transition-colors" aria-selected={i === 0 ? 'true' : 'false'} aria-controls={`ds-panel-${d.id}`} tabindex={i === 0 ? 0 : -1}>
+          <button type="button" role="tab" id={`ds-tab-${d.id}`} class="ds-toggle flex w-full items-center justify-between border border-ink px-4 py-3 text-left text-[14px] font-semibold transition-colors" aria-selected="false" aria-controls={`ds-panel-${d.id}`} tabindex={0}>
             <span>Inspect schema &amp; quickstart</span><span class="ds-arrow" aria-hidden="true">↓</span>
           </button>
         </article>
       ))}
     </div>
     {datasets.map((d, i) => (
-      <div id={`ds-panel-${d.id}`} role="tabpanel" aria-labelledby={`ds-tab-${d.id}`} class="ds-panel scroll-mt-20 border-t-[3px] border-accent bg-alt px-5 py-8 md:px-8" hidden={i !== 0}>
+      <div id={`ds-panel-${d.id}`} role="tabpanel" aria-labelledby={`ds-tab-${d.id}`} class="ds-panel scroll-mt-20 border-t-[3px] border-accent bg-alt px-5 py-8 md:px-8" hidden>
         <p class="font-mono text-[13px] text-accent">{d.name} · schema &amp; quick start</p>
         <div class="mt-6 grid gap-10 md:grid-cols-2">
           <div class="min-w-0">
@@ -61,14 +61,18 @@ import Code from './Code.astro';
   const tabs = cols.map((c) => c.querySelector<HTMLButtonElement>('.ds-toggle')!);
   const panels = Array.from(document.querySelectorAll<HTMLElement>('.ds-panel'));
   const mobile = matchMedia('(max-width: 767px)');
+  let open = -1;
   function show(i: number, focus = false) {
+    i = open === i ? -1 : i; open = i; // pressing the open card again closes it
     cols.forEach((c, k) => {
       const on = k === i;
       c.classList.toggle('is-on', on);
+      tabs[k].querySelector('span')!.textContent = on ? 'Hide schema & quickstart' : 'Inspect schema & quickstart';
+      tabs[k].querySelector('.ds-arrow')!.textContent = on ? '↑' : '↓';
       tabs[k].setAttribute('aria-selected', String(on));
-      tabs[k].tabIndex = on ? 0 : -1;
     });
     panels.forEach((p, k) => { p.hidden = k !== i; });
+    if (i < 0) return;
     if (focus) tabs[i].focus();
     // on phones the panel sits after all three cards: bring it into view
     if (mobile.matches) panels[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -79,6 +83,6 @@ import Code from './Code.astro';
   }));
   tabs.forEach((t, i) => t.addEventListener('keydown', (e) => {
     const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0;
-    if (d) { e.preventDefault(); show((i + d + tabs.length) % tabs.length, true); }
+    if (d) { e.preventDefault(); { open = -1; show((i + d + tabs.length) % tabs.length, true); }; }
   }));
 </script>
