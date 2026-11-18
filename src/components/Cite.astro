@@ -8,8 +8,8 @@ const logo = (name: string) => {
   return null;
 };
 const partners = [
-  { href: links.pic4ser, src: logo('pic4ser'), name: 'PIC4SeR', sub: 'Politecnico di Torino', alt: 'PIC4SeR, Politecnico di Torino' },
-  { href: links.yanmar, src: logo('yanmar'), name: 'YANMAR', sub: 'R&D Europe', alt: 'YANMAR R&D Europe' },
+  { href: links.pic4ser, src: logo('pic4ser'), cls: 'w-[82%] max-w-[400px]', name: 'PIC4SeR', sub: 'Politecnico di Torino', alt: 'PIC4SeR, Politecnico di Torino' },
+  { href: links.yanmar, src: logo('yanmar'), cls: 'h-[84px] md:h-[110px]', name: 'YANMAR', sub: 'R&D Europe', alt: 'YANMAR R&D Europe' },
 ];
 ---
 <section id="cite" class="py-20 md:py-28">
@@ -19,7 +19,7 @@ const partners = [
       {partners.map((p) => (
         <a href={p.href} class="grid min-h-[160px] place-items-center bg-ground px-8 py-10 text-center transition-colors hover:bg-alt md:min-h-[220px]">
           {p.src
-            ? <img src={p.src} alt={p.alt} class="h-auto max-h-[96px] w-auto max-w-[78%] md:max-h-[120px]" loading="lazy" />
+            ? <img src={p.src} alt={p.alt} class={`block ${p.cls}`} loading="lazy" />
             : <span><b class="block font-display text-[34px] font-bold tracking-head md:text-[44px]">{p.name}</b><span class="mt-1 block text-[15px] text-muted">{p.sub}</span></span>}
         </a>
       ))}
