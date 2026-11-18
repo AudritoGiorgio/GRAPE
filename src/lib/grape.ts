@@ -152,9 +152,9 @@ function roverSVG(): string {
   for (const [a, b] of [[-116, -80], [80, 116]]) o.push(`<rect x="${a + 4}" y="-68" width="${b - a - 8}" height="52" fill="#151618"/>`);
   o.push(`<rect x="-48" y="-166" width="6" height="100" fill="${al}"/><rect x="42" y="-166" width="6" height="100" fill="${al}"/>`);
   o.push(`<line x1="-45" y1="-88" x2="45" y2="-131" stroke="${al}" stroke-width="3"/>`);
-  o.push(`<rect x="-128" y="-170" width="256" height="6" fill="${al}"/><rect x="-146" y="-123" width="292" height="6" fill="${al}"/>`);
-  for (const x of [-118, 118]) o.push(`<rect x="${x - 2}" y="-180" width="4" height="10" fill="${al}"/><ellipse cx="${x}" cy="-184" rx="20" ry="6" fill="#ECEEF0" stroke="#7D838A" stroke-width="1.5"/>`);
-  for (const [x, lx] of [[-168, -162], [138, 162]]) o.push(`<rect x="${x}" y="-135" width="30" height="18" fill="#2B2E33"/><circle cx="${lx}" cy="-126" r="3.4" fill="#6A7A92"/>`);
+  o.push(`<rect x="-102" y="-170" width="204" height="6" fill="${al}"/><rect x="-117" y="-123" width="234" height="6" fill="${al}"/>`);
+  for (const x of [-94, 94]) o.push(`<rect x="${x - 2}" y="-180" width="4" height="10" fill="${al}"/><ellipse cx="${x}" cy="-184" rx="20" ry="6" fill="#ECEEF0" stroke="#7D838A" stroke-width="1.5"/>`);
+  for (const [x, lx] of [[-134, -128], [104, 128]]) o.push(`<rect x="${x}" y="-135" width="30" height="18" fill="#2B2E33"/><circle cx="${lx}" cy="-126" r="3.4" fill="#6A7A92"/>`);
   o.push(`<rect x="-26" y="-92" width="52" height="20" fill="#3A3D42"/>`);
   o.push(`<polygon points="-82,-74 82,-74 86,-64 -86,-64" fill="#26282B"/>`);
   o.push(`<polygon points="-86,-64 86,-64 92,-12 -92,-12" fill="#E3B51D"/>`);

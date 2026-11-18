@@ -1,16 +1,34 @@
 ---
+import { existsSync } from 'node:fs';
 import { paper, links } from '../data/site';
+// Drop official logos into public/logos/ as pic4ser.svg|png and yanmar.svg|png; they replace the text wordmarks on the next build.
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const logo = (name: string) => {
+  for (const ext of ['svg', 'png', 'webp']) if (existsSync(`public/logos/${name}.${ext}`)) return `${base}/logos/${name}.${ext}`;
+  return null;
+};
+const partners = [
+  { href: links.pic4ser, src: logo('pic4ser'), name: 'PIC4SeR', sub: 'Politecnico di Torino', alt: 'PIC4SeR, Politecnico di Torino' },
+  { href: links.yanmar, src: logo('yanmar'), name: 'YANMAR', sub: 'R&D Europe', alt: 'YANMAR R&D Europe' },
+];
 ---
 <section id="cite" class="py-20 md:py-28">
-  <div class="wrap grid gap-14 md:grid-cols-[1fr_1.2fr]">
+  <div class="wrap">
+    <p class="kicker">Built by</p>
+    <div class="mt-6 grid gap-px border border-line bg-line sm:grid-cols-2">
+      {partners.map((p) => (
+        <a href={p.href} class="grid min-h-[160px] place-items-center bg-ground px-8 py-10 text-center transition-colors hover:bg-alt md:min-h-[220px]">
+          {p.src
+            ? <img src={p.src} alt={p.alt} class="h-auto max-h-[96px] w-auto max-w-[78%] md:max-h-[120px]" loading="lazy" />
+            : <span><b class="block font-display text-[34px] font-bold tracking-head md:text-[44px]">{p.name}</b><span class="mt-1 block text-[15px] text-muted">{p.sub}</span></span>}
+        </a>
+      ))}
+    </div>
+  </div>
+  <div class="wrap mt-16 grid gap-14 md:grid-cols-[1fr_1.2fr]">
     <div>
-      <p class="kicker">Built by</p>
-      <div class="mt-5 grid gap-px border border-line bg-line sm:grid-cols-2">
-        <!-- Replace the text wordmarks with official SVG logos in public/logos/ when available. -->
-        <a href={links.pic4ser} class="grid min-h-[96px] place-items-center bg-ground px-4 text-center"><span><b class="block font-display text-[22px] font-bold tracking-head">PIC4SeR</b><span class="text-[13px] text-muted">Politecnico di Torino</span></span></a>
-        <a href={links.yanmar} class="grid min-h-[96px] place-items-center bg-ground px-4 text-center"><span><b class="block font-display text-[22px] font-bold tracking-head">YANMAR</b><span class="text-[13px] text-muted">R&amp;D Europe</span></span></a>
-      </div>
-      <p class="mt-6 text-[15px] leading-relaxed text-muted">{paper.authors.join(', ')}</p>
+      <p class="kicker">Authors</p>
+      <p class="mt-5 text-[15px] leading-relaxed text-muted">{paper.authors.join(', ')}</p>
     </div>
     <div class="min-w-0">
       <div class="flex items-baseline justify-between"><p class="kicker">Cite GRAPE</p><button type="button" id="copy-bib" class="lnk text-[14px]">Copy BibTeX</button></div>

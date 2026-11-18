@@ -63,3 +63,7 @@ Copy it into the benchmark repo (`PIC4SeR/grape-bench`) so the link in `src/data
 optional shoulder; per session it changes length, width, berry size, spacing, visible berry count and colour
 (green → veraison → blue-black with bloom → a few shrivelled berries). The hero scene is generated at build
 time into `hero-scene.svg`; the season section redraws the cluster in the browser while you scroll.
+
+## Partner logos
+
+Put the official logos in `public/logos/` as `pic4ser.svg` and `yanmar.svg` (PNG or WebP also work). On the next build they replace the text wordmarks in the "Built by" block.
