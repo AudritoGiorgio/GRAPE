@@ -8,7 +8,7 @@ export const links = {
   contributeGithub: 'https://github.com/PIC4SeR/grape-bench/blob/main/CONTRIBUTING.md',
   // TODO: replace with the real Google Form for vineyard partners
   googleForm: '#google-form-placeholder',
-  contactEmail: 'giorgio.audrito@polito.it',
+  contactEmail: 'giorgio_audrito@polito.it',
   pic4ser: 'https://pic4ser.polito.it/',
   yanmar: 'https://www.yanmar.com/eu/',
 };

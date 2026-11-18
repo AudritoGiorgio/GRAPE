@@ -40,8 +40,8 @@ export const stageColor = (x: number) => toS(berryRGB({ v: 2.4, j: 0.5 }, x));
 
 /* cluster model: length, width, berry size, looseness and visible count change per session */
 const P = {
-  L: [200, 226, 246, 258, 266, 264], R: [33, 39, 44, 47, 49, 48], r: [4, 5.8, 7.6, 8.9, 9.8, 9.4],
-  sp: [1.22, 1.12, 1, 0.96, 0.95, 0.98], n: [0.62, 0.8, 0.93, 1, 1, 0.9],
+  L: [168, 200, 228, 250, 268, 284], R: [27, 33, 39, 44, 48, 52], r: [3.4, 5, 6.6, 8, 9.3, 10.4],
+  sp: [1.24, 1.14, 1.04, 0.98, 0.95, 0.94], n: [0.55, 0.72, 0.86, 0.95, 1, 1],
 };
 const at = (a: number[], x: number) => { const i = Math.min(4, Math.floor(x)), f = x - i; return a[i] + (a[i + 1] - a[i]) * f; };
 
@@ -92,7 +92,6 @@ export function clusterSVG(c: Cluster, x: number, o: ClusterOpts = {}): string {
   const strokeA = f2(0.12 + 0.2 * late);
   for (const [b, q, a] of vis) {
     let rr = rb * rm * (0.88 + 0.2 * b.j) * (0.9 + 0.1 * q.z);
-    if (x > 4.4 && b.j < 0.14) rr *= 1 - 0.2 * Math.min(1, (x - 4.4) / 0.6);
     const col = toS(mixA(berryRGB(b, x), BLK, Math.max(0, -q.z) * 0.3));
     const op = a < 1 ? ` opacity="${f2(a)}"` : '';
     out.push(detail
@@ -110,7 +109,7 @@ export function clusterSVG(c: Cluster, x: number, o: ClusterOpts = {}): string {
 const LEAF = ['#557A35', '#4A6E2E', '#6A8C40', '#3E5F27', '#7E9C4E', '#5F8238'];
 const VPx = 1067, VPy = 500, HX = 4;
 
-type RowOpts = { top: number; fruit: number; gr: number; q: number; n: number; leaves: number; cs: number; seed: number };
+type RowOpts = { top: number; fruit: number; gr: number; q: number; n: number; leaves: number; cs: number; seed: number; lsz?: number };
 
 function rowSVG(side: 'L' | 'R', o: RowOpts, rr: () => number): string {
   const edge = side === 'L' ? 0 : 1600;
@@ -127,7 +126,7 @@ function rowSVG(side: 'L' | 'R', o: RowOpts, rr: () => number): string {
     if (k % 6 === 0) out.push(`<line x1="${f1(x)}" y1="${f1(b.t - h * 0.04)}" x2="${f1(x)}" y2="${f1(b.g + h * 0.01)}" stroke="#BDB6A8" stroke-width="${f2(Math.max(1, h * 0.022))}"/>`);
     for (let i = 0; i < o.leaves; i++) {
       const lx = x + span * rr(), bb = band(lx), hh = bb.g - bb.t;
-      out.push(leaf(lx, lerp(bb.t - hh * 0.03, bb.f + hh * 0.03, Math.pow(rr(), 0.8)), hh * (0.045 + rr() * 0.03)));
+      out.push(leaf(lx, lerp(bb.t - hh * 0.03, bb.f + hh * 0.03, Math.pow(rr(), 0.8)), hh * (0.045 + rr() * 0.03) * (o.lsz ?? 1)));
     }
     const u = rr(), nc = u < 0.12 ? 0 : u < 0.45 ? 1 : u < 0.85 ? 2 : 3;
     for (let c = 0; c < nc; c++) {
@@ -151,11 +150,11 @@ function roverSVG(): string {
   const al = '#A9AEB4', o: string[] = [];
   o.push(`<ellipse cx="0" cy="4" rx="140" ry="14" fill="#1E2220" opacity=".2"/>`);
   for (const [a, b] of [[-116, -80], [80, 116]]) o.push(`<rect x="${a + 4}" y="-68" width="${b - a - 8}" height="52" fill="#151618"/>`);
-  o.push(`<rect x="-48" y="-266" width="6" height="200" fill="${al}"/><rect x="42" y="-266" width="6" height="200" fill="${al}"/>`);
-  o.push(`<line x1="-45" y1="-110" x2="45" y2="-196" stroke="${al}" stroke-width="3"/>`);
-  o.push(`<rect x="-128" y="-270" width="256" height="6" fill="${al}"/><rect x="-146" y="-176" width="292" height="6" fill="${al}"/>`);
-  for (const x of [-118, 118]) o.push(`<rect x="${x - 2}" y="-280" width="4" height="10" fill="${al}"/><ellipse cx="${x}" cy="-284" rx="20" ry="6" fill="#ECEEF0" stroke="#7D838A" stroke-width="1.5"/>`);
-  for (const [x, lx] of [[-168, -162], [138, 162]]) o.push(`<rect x="${x}" y="-188" width="30" height="18" fill="#2B2E33"/><circle cx="${lx}" cy="-179" r="3.4" fill="#6A7A92"/>`);
+  o.push(`<rect x="-48" y="-166" width="6" height="100" fill="${al}"/><rect x="42" y="-166" width="6" height="100" fill="${al}"/>`);
+  o.push(`<line x1="-45" y1="-88" x2="45" y2="-131" stroke="${al}" stroke-width="3"/>`);
+  o.push(`<rect x="-128" y="-170" width="256" height="6" fill="${al}"/><rect x="-146" y="-123" width="292" height="6" fill="${al}"/>`);
+  for (const x of [-118, 118]) o.push(`<rect x="${x - 2}" y="-180" width="4" height="10" fill="${al}"/><ellipse cx="${x}" cy="-184" rx="20" ry="6" fill="#ECEEF0" stroke="#7D838A" stroke-width="1.5"/>`);
+  for (const [x, lx] of [[-168, -162], [138, 162]]) o.push(`<rect x="${x}" y="-135" width="30" height="18" fill="#2B2E33"/><circle cx="${lx}" cy="-126" r="3.4" fill="#6A7A92"/>`);
   o.push(`<rect x="-26" y="-92" width="52" height="20" fill="#3A3D42"/>`);
   o.push(`<polygon points="-82,-74 82,-74 86,-64 -86,-64" fill="#26282B"/>`);
   o.push(`<polygon points="-86,-64 86,-64 92,-12 -92,-12" fill="#E3B51D"/>`);
@@ -189,7 +188,7 @@ export function heroSceneSVG(): string {
   parts.push(`<line x1="${f1(cx - 62 * s * 1.6)}" y1="${cy}" x2="${VPx - 3}" y2="${VPy}" stroke="#8C8467" stroke-opacity=".45" stroke-width="4"/>`);
   parts.push(`<line x1="${f1(cx + 62 * s * 1.6)}" y1="${cy}" x2="${VPx + 3}" y2="${VPy}" stroke="#8C8467" stroke-opacity=".45" stroke-width="4"/>`);
   // same cluster scale constant on both rows keeps the perspective honest
-  parts.push(`<g>${rowSVG('L', { top: 455, fruit: 598, gr: 700, q: 0.86, n: 34, leaves: 9, cs: 0.00085, seed: 800 }, rr)}</g>`);
+  parts.push(`<g>${rowSVG('L', { top: 455, fruit: 598, gr: 700, q: 0.86, n: 34, leaves: 30, lsz: 1.3, cs: 0.00085, seed: 800 }, rr)}</g>`);
   parts.push(`<g>${rowSVG('R', { top: 28, fruit: 650, gr: 965, q: 0.8, n: 24, leaves: 16, cs: 0.00085, seed: 100 }, rr)}</g>`);
   parts.push(`<polygon points="1488,-10 1522,-10 1612,910 1574,910" fill="#CBC5B8"/><polygon points="1488,-10 1497,-10 1584,910 1574,910" fill="#A39C8D"/>`);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">${parts.join('')}</svg>`;

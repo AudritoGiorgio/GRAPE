@@ -18,7 +18,7 @@ const first = clusterSVG(makeCluster(7, true), 0, { k: 1.2 });
           <p class="mt-3 text-[19px] font-semibold md:text-[22px]" id="s-stage" style={`color:${stageColor(0)}`}>{sessions[0].stage}</p>
           <p class="mt-4 max-w-[34ch] text-[16px] leading-relaxed text-muted" id="s-text">{sessions[0].text}</p>
         </div>
-        <svg id="s-cluster" viewBox="-95 -36 190 320" class="mx-auto h-[42svh] max-h-[460px] min-h-[260px] w-full" role="img" aria-label="Illustrated grape cluster at the current session" set:html={first}></svg>
+        <svg id="s-cluster" viewBox="-112 -36 224 350" class="mx-auto h-[42svh] max-h-[460px] min-h-[260px] w-full" role="img" aria-label="Illustrated grape cluster at the current session" set:html={first}></svg>
         <figure class="grid gap-2">
           <p class="kicker">Actual data</p>
           <img id="s-photo" src={base + sessions[0].photo} alt="Field photo of the same vines in this session" width="355" height="265" class="aspect-[4/3] w-full border border-line object-cover" loading="lazy" />
