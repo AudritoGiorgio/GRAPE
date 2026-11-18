@@ -1,0 +1,58 @@
+# Copy this file into the benchmark repo (PIC4SeR/grape-bench) at .github/ISSUE_TEMPLATE/
+name: Submit results to the GRAPE leaderboard
+description: Send your method's results for verification and listing on the leaderboard.
+title: "[Leaderboard] <method name>"
+labels: ["leaderboard-submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for benchmarking on GRAPE. Use the official protocol: train on splits 1–3, validate on split 4, test on split 5.
+        We re-run or check every submission before it appears on the leaderboard.
+  - type: input
+    id: method
+    attributes: { label: Method name, placeholder: "e.g. YOLOv8s + BoT-SORT" }
+    validations: { required: true }
+  - type: dropdown
+    id: task
+    attributes:
+      label: Task
+      options: [Detection, Tracking, Segmentation]
+    validations: { required: true }
+  - type: input
+    id: authors
+    attributes: { label: Authors / team }
+    validations: { required: true }
+  - type: input
+    id: code
+    attributes: { label: Code or weights (URL), description: Public repository, release or model weights we can use to reproduce. }
+    validations: { required: true }
+  - type: input
+    id: paper
+    attributes: { label: Paper or preprint (URL, optional) }
+  - type: textarea
+    id: overall
+    attributes:
+      label: Overall results
+      description: |
+        Detection: P, R, mAP50, mAP75, mAP50:95 (mean of the six sessions)
+        Tracking: HOTA, DetA, AssA, MOTA, IDF1, ID switches (total)
+        Segmentation: Mask mAP50:95, Mask mAP50, Mask P, Mask R, Box mAP50:95, Box mAP50
+    validations: { required: true }
+  - type: textarea
+    id: sessions
+    attributes:
+      label: Per-session results
+      description: One line per session (2025-06-27, 2025-07-11, 2025-07-28, 2025-08-14, 2025-09-11, 2025-10-02), same metric order as above.
+      render: csv
+  - type: textarea
+    id: notes
+    attributes: { label: Method note, description: "Backbone, input size, training data used, anything that differs from the protocol." }
+    validations: { required: true }
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Confirmation
+      options:
+        - label: I followed the official split protocol and did not train on the test split.
+          required: true

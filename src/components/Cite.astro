@@ -1,0 +1,28 @@
+---
+import { paper, links } from '../data/site';
+---
+<section id="cite" class="py-20 md:py-28">
+  <div class="wrap grid gap-14 md:grid-cols-[1fr_1.2fr]">
+    <div>
+      <p class="kicker">Built by</p>
+      <div class="mt-5 grid gap-px border border-line bg-line sm:grid-cols-2">
+        <!-- Replace the text wordmarks with official SVG logos in public/logos/ when available. -->
+        <a href={links.pic4ser} class="grid min-h-[96px] place-items-center bg-ground px-4 text-center"><span><b class="block font-display text-[22px] font-bold tracking-head">PIC4SeR</b><span class="text-[13px] text-muted">Politecnico di Torino</span></span></a>
+        <a href={links.yanmar} class="grid min-h-[96px] place-items-center bg-ground px-4 text-center"><span><b class="block font-display text-[22px] font-bold tracking-head">YANMAR</b><span class="text-[13px] text-muted">R&amp;D Europe</span></span></a>
+      </div>
+      <p class="mt-6 text-[15px] leading-relaxed text-muted">{paper.authors.map((a, i) => (<>{i === 0 ? <b class="font-semibold text-ink">{a}</b> : a}{i < paper.authors.length - 1 ? ', ' : ''}</>))}</p>
+    </div>
+    <div class="min-w-0">
+      <div class="flex items-baseline justify-between"><p class="kicker">Cite GRAPE</p><button type="button" id="copy-bib" class="lnk text-[14px]">Copy BibTeX</button></div>
+      <pre id="bibtex" class="mt-4 overflow-x-auto bg-ink p-6 font-mono text-[13px] leading-relaxed text-ground">{paper.bibtex}</pre>
+    </div>
+  </div>
+</section>
+<script>
+  const btn = document.getElementById('copy-bib')!, pre = document.getElementById('bibtex')!;
+  btn.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(pre.textContent ?? ''); btn.textContent = 'Copied'; }
+    catch { const r = document.createRange(); r.selectNodeContents(pre); const s = getSelection()!; s.removeAllRanges(); s.addRange(r); btn.textContent = 'Selected, press Ctrl+C'; }
+    setTimeout(() => { btn.textContent = 'Copy BibTeX'; }, 2000);
+  });
+</script>

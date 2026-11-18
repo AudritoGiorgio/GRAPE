@@ -1,0 +1,58 @@
+---
+import board from '../data/leaderboard.json';
+import { renderTable, type Board } from '../lib/leaderboard';
+import { links } from '../data/site';
+const b = board as Board;
+const keys = Object.keys(b.tasks);
+const initial = renderTable(b, keys[0], null, links.submitResults);
+---
+<section id="leaderboard" class="border-t border-line py-24 md:py-36" data-submit={links.submitResults}>
+  <div class="wrap">
+    <p class="kicker">Benchmark</p>
+    <div class="mt-4 flex flex-wrap items-end gap-x-12 gap-y-6">
+      <h2 class="h2 mr-auto">Leaderboard</h2>
+      <div role="tablist" aria-label="Task" class="flex flex-wrap gap-7" id="lb-tabs">
+        {keys.map((k, i) => (
+          <button role="tab" type="button" data-k={k} aria-selected={i === 0 ? 'true' : 'false'}
+            class="border-b-2 border-transparent py-1 text-[16px] font-semibold text-muted aria-selected:border-ink aria-selected:text-ink">{b.tasks[k].label}</button>
+        ))}
+      </div>
+    </div>
+    <div class="mt-8 flex flex-wrap items-center gap-x-10 gap-y-4">
+      <div class="flex gap-6" id="lb-mode">
+        <button type="button" data-m="all" aria-pressed="true" class="border-b-2 border-transparent py-1 text-[14px] font-semibold text-muted aria-pressed:border-ink aria-pressed:text-ink">Overall</button>
+        <button type="button" data-m="ses" aria-pressed="false" class="border-b-2 border-transparent py-1 text-[14px] font-semibold text-muted aria-pressed:border-ink aria-pressed:text-ink">Per session</button>
+      </div>
+      <div class="flex flex-wrap gap-5" id="lb-sessions" hidden>
+        {b.sessions.map((s, i) => (
+          <button type="button" data-s={i} aria-pressed={i === 0 ? 'true' : 'false'} class="border-b-2 border-transparent py-1 font-mono text-[13px] text-muted aria-pressed:border-accent aria-pressed:text-accent">{s}</button>
+        ))}
+      </div>
+    </div>
+    <div class="mt-6 overflow-x-auto border-t-2 border-ink">
+      <table class="tabular w-full min-w-[640px] border-collapse text-[15px]" id="lb-table" set:html={initial}></table>
+    </div>
+    <p class="mt-4 text-[14px] text-muted" id="lb-note">{b.tasks[keys[0]].note} Source: GRAPE paper, Tables 5–7.</p>
+  </div>
+</section>
+<script>
+  import board from '../data/leaderboard.json';
+  import { renderTable, type Board } from '../lib/leaderboard';
+  const b = board as Board;
+  const root = document.getElementById('leaderboard')!;
+  const submit = root.dataset.submit!;
+  const tabs = document.getElementById('lb-tabs')!, mode = document.getElementById('lb-mode')!, ses = document.getElementById('lb-sessions')!;
+  const table = document.getElementById('lb-table')!, note = document.getElementById('lb-note')!;
+  let task = Object.keys(b.tasks)[0], perSession = false, s = 0;
+  function draw() {
+    tabs.querySelectorAll('button').forEach((x) => x.setAttribute('aria-selected', String(x.dataset.k === task)));
+    mode.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String((x.dataset.m === 'ses') === perSession)));
+    ses.hidden = !perSession;
+    ses.querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(Number(x.dataset.s) === s)));
+    table.innerHTML = renderTable(b, task, perSession ? s : null, submit);
+    note.textContent = `${b.tasks[task].note}${perSession ? ` Showing session ${b.sessions[s]}.` : ''} Source: GRAPE paper, Tables 5–7.`;
+  }
+  tabs.addEventListener('click', (e) => { const x = (e.target as HTMLElement).closest('button'); if (x) { task = x.dataset.k!; draw(); } });
+  mode.addEventListener('click', (e) => { const x = (e.target as HTMLElement).closest('button'); if (x) { perSession = x.dataset.m === 'ses'; draw(); } });
+  ses.addEventListener('click', (e) => { const x = (e.target as HTMLElement).closest('button'); if (x) { s = Number(x.dataset.s); draw(); } });
+</script>

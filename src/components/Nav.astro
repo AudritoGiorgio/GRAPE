@@ -1,0 +1,33 @@
+---
+import { links } from '../data/site';
+const items = [['Problem', '#problem'], ['Season', '#season'], ['Datasets', '#datasets'], ['Leaderboard', '#leaderboard'], ['Get involved', '#get-involved'], ['Cite', '#cite']];
+---
+<header id="nav" class="sticky top-0 z-40 border-b border-transparent bg-ground transition-colors">
+  <div class="wrap flex h-16 items-center gap-8">
+    <a href="#top" class="font-display text-xl font-extrabold tracking-display">GRAPE</a>
+    <nav aria-label="Sections" class="ml-auto hidden gap-7 text-[14px] text-muted lg:flex">
+      {items.map(([l, h]) => <a href={h} class="hover:text-ink">{l}</a>)}
+    </nav>
+    <a href={links.github} class="ml-auto hidden text-[14px] font-semibold underline underline-offset-[6px] lg:ml-0 lg:inline">GitHub</a>
+    <button id="menu-btn" type="button" class="ml-auto text-[14px] font-semibold lg:hidden" aria-expanded="false" aria-controls="menu">Menu</button>
+  </div>
+  <nav id="menu" aria-label="Sections" class="hidden border-t border-line bg-ground lg:hidden">
+    <div class="wrap grid py-3 text-[16px]">
+      {items.map(([l, h]) => <a href={h} class="border-b border-line py-3 last:border-0">{l}</a>)}
+      <a href={links.github} class="py-3 font-semibold">GitHub →</a>
+    </div>
+  </nav>
+</header>
+<script>
+  const nav = document.getElementById('nav')!;
+  const btn = document.getElementById('menu-btn')!;
+  const menu = document.getElementById('menu')!;
+  const onScroll = () => nav.classList.toggle('border-line', window.scrollY > 8);
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+  btn.addEventListener('click', () => {
+    const open = menu.classList.toggle('hidden') === false;
+    btn.setAttribute('aria-expanded', String(open));
+    btn.textContent = open ? 'Close' : 'Menu';
+  });
+  menu.addEventListener('click', (e) => { if ((e.target as HTMLElement).closest('a')) { menu.classList.add('hidden'); btn.setAttribute('aria-expanded', 'false'); btn.textContent = 'Menu'; } });
+</script>

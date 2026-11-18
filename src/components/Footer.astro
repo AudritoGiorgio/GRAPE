@@ -1,0 +1,12 @@
+---
+import { links } from '../data/site';
+---
+<footer class="bg-ink text-line">
+  <div class="wrap flex flex-wrap items-baseline gap-x-8 gap-y-3 py-8 text-[14px]">
+    <a href="#top" class="mr-auto font-display text-[20px] font-extrabold tracking-display text-ground">GRAPE</a>
+    <span>Data CC BY 4.0 · Code MIT</span>
+    <a href="https://doi.org/10.5281/zenodo.22960111" class="hover:text-ground">Zenodo</a>
+    <a href={links.github} class="hover:text-ground">GitHub</a>
+    <span class="select-all">{links.contactEmail}</span>
+  </div>
+</footer>

@@ -1,0 +1,43 @@
+---
+import { makeCluster, clusterSVG } from '../lib/grape';
+import { sessions } from '../data/sessions';
+const one = makeCluster(7, true);
+const tiles = sessions.map((s, i) => ({ date: s.short, svg: clusterSVG(one, i, { k: 1.4 }) }));
+const facts = [
+  ['Manual', 'Cluster monitoring is labour-intensive, subjective and hard to scale across hectares.'],
+  ['Shifting', 'Size, colour, compactness and leaf cover all change between berry set and harvest.'],
+  ['One shot', 'Public grape datasets mostly capture a single stage, from a fixed stand rather than a moving robot.'],
+];
+---
+<section id="problem" class="py-24 md:py-36">
+  <div class="wrap grid gap-16 md:grid-cols-[5fr_7fr] md:gap-20">
+    <div>
+      <p class="kicker">The problem</p>
+      <h2 class="h2 mt-4">Grapes change all season. Most vineyard vision data doesn't.</h2>
+      <p class="mt-6 max-w-[60ch] text-[18px] leading-relaxed text-muted">Growers still track clusters by walking rows and judging by eye. Robots could take that over, but a model trained on one week of the season gives no guarantee for the next.</p>
+      <dl class="mt-10 border-t border-line">
+        {facts.map(([k, v]) => (
+          <div class="grid grid-cols-[7.5rem_1fr] gap-4 border-b border-line py-4">
+            <dt class="font-display text-[19px] font-bold">{k}</dt><dd class="text-[15px] leading-relaxed text-muted">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </div>
+    <div class="flex flex-col justify-center gap-6">
+      <div class="grid grid-cols-6 border-b border-ink" role="img" aria-label="The same grape cluster drawn at each of the six sessions, from small green berries in June to dark ripe fruit in October">
+        {tiles.map((t) => (
+          <div class="grid justify-items-center gap-2 pb-3">
+            <svg viewBox="-95 -36 190 320" class="h-auto w-[86%]" aria-hidden="true" set:html={t.svg}></svg>
+            <span class="font-mono text-[11px] text-muted md:text-[12px]">{t.date}</span>
+          </div>
+        ))}
+      </div>
+      <div class="relative h-8 text-[13px] text-muted"><div class="absolute left-0 top-0 w-1/6 border-t-2 border-muted pt-2 text-center">typical dataset</div></div>
+      <div class="relative h-8 text-[13px]"><div class="absolute inset-x-0 top-0 border-t-2 border-accent pt-2 text-right font-semibold text-accent">GRAPE: the same clusters, all six sessions →</div></div>
+      <div class="mt-4 grid gap-8 sm:grid-cols-2">
+        <div><h3 class="font-display text-[20px] font-bold">What GRAPE does</h3><p class="mt-2 text-[15px] leading-relaxed text-muted">Follows 200 clusters along 240 m of commercial row in Agliè, Italy, with a persistent ID on each, from 27 June to 2 October 2025.</p></div>
+        <div><h3 class="font-display text-[20px] font-bold">What it enables</h3><p class="mt-2 text-[15px] leading-relaxed text-muted">Detection, tracking, counting and mapping you can test across the whole season before deploying in the field.</p></div>
+      </div>
+    </div>
+  </div>
+</section>

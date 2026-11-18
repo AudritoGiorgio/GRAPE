@@ -1,0 +1,22 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; scroll-padding-top: 64px; }
+  body { @apply bg-ground text-ink font-sans antialiased; }
+  h1, h2, h3, h4 { text-wrap: balance; }
+  :focus-visible { outline: 2px solid #4B2D6E; outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+}
+@layer components {
+  .wrap { @apply mx-auto max-w-page px-5 md:px-10; }
+  .kicker { @apply font-mono text-[13px] text-muted; }
+  .h2 { @apply font-display font-bold tracking-head text-[34px] leading-[1.04] md:text-[52px]; }
+  .btn { @apply inline-flex items-center gap-2 bg-accent px-6 py-4 text-[15px] font-semibold leading-none text-white transition-colors hover:bg-accent-dark; }
+  .lnk { @apply inline-flex items-center gap-1 text-[15px] font-semibold text-ink underline decoration-1 underline-offset-[6px] hover:decoration-2; }
+}
+.tabular { font-variant-numeric: tabular-nums; }
+[hidden] { display: none !important; }
+/* align overlay text in full-bleed sections with the .wrap content edge */
+.edge-left { left: calc(max(0px, (100% - 1240px) / 2) + 40px); }

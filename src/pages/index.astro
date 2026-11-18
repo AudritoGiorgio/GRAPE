@@ -1,0 +1,45 @@
+---
+import '../styles/global.css';
+import Nav from '../components/Nav.astro';
+import Hero from '../components/Hero.astro';
+import Stats from '../components/Stats.astro';
+import Problem from '../components/Problem.astro';
+import Season from '../components/Season.astro';
+import Datasets from '../components/Datasets.astro';
+import Leaderboard from '../components/Leaderboard.astro';
+import GetInvolved from '../components/GetInvolved.astro';
+import Cite from '../components/Cite.astro';
+import Footer from '../components/Footer.astro';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const description = 'GRAPE: an open, multi-season vineyard dataset for grape cluster detection, tracking and segmentation, recorded by a ground robot from June to October 2025.';
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>GRAPE · Autonomous perception across the vineyard life cycle</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content="GRAPE dataset" />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <link rel="icon" type="image/svg+xml" href={base + 'favicon.svg'} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@500;700;800&family=Red+Hat+Mono:wght@400;500&family=Red+Hat+Text:wght@400;500;600&display=swap" />
+  </head>
+  <body>
+    <Nav />
+    <main>
+      <Hero />
+      <Stats />
+      <Problem />
+      <Season />
+      <Datasets />
+      <Leaderboard />
+      <GetInvolved />
+      <Cite />
+    </main>
+    <Footer />
+  </body>
+</html>

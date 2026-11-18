@@ -1,0 +1,36 @@
+---
+import { links } from '../data/site';
+const doors = [
+  { who: 'For researchers and engineers', title: 'Benchmark your algorithm',
+    steps: [['Train on splits 1–3, validate on 4, test on 5', ', the protocol used in the paper.'], ['Open a submission issue', ' on GitHub with your metrics, code or weights, and a short method note.'], ['We re-run and verify', ', then add your method to the leaderboard with credit.']],
+    cta: ['Submit results', links.submitResults], link: ['Read the protocol →', links.protocol] },
+  { who: 'For vineyards, agronomists and researchers', title: 'Expand the dataset',
+    steps: [['Share new data', ' from your vineyard, cultivar or training system.'], ['Add labels', ': new classes, BBCH stages, masks, or corrections.'], ['Extract new information', ' such as counts, berry size, yield or 3D maps from the raw bags.']],
+    cta: ['Propose a contribution', links.googleForm], link: ['Contribute on GitHub →', links.contributeGithub] },
+];
+---
+<section id="get-involved" class="bg-alt py-24 md:py-36">
+  <div class="wrap">
+    <p class="kicker">Get involved</p>
+    <h2 class="h2 mt-4 max-w-[18ch]">Help GRAPE grow beyond one vineyard</h2>
+    <div class="mt-12 grid border-t border-ink md:grid-cols-2">
+      {doors.map((d, i) => (
+        <div class={`flex min-w-0 flex-col gap-6 pt-8 ${i === 0 ? 'md:pr-10' : 'mt-12 border-t border-line md:mt-0 md:border-l md:border-t-0 md:pl-10'}`}>
+          <p class="font-mono text-[13px] text-muted">{d.who}</p>
+          <h3 class="font-display text-[30px] font-bold leading-none tracking-head md:text-[36px]">{d.title}</h3>
+          <ol class="border-t border-line">
+            {d.steps.map(([b, t], k) => (
+              <li class="grid grid-cols-[2.5rem_1fr] gap-2 border-b border-line py-4 text-[16px] leading-relaxed text-muted">
+                <span class="font-mono text-[14px] text-ink">{String(k + 1).padStart(2, '0')}</span><span><b class="font-semibold text-ink">{b}</b>{t}</span>
+              </li>
+            ))}
+          </ol>
+          <div class="mt-auto flex flex-wrap items-center gap-7 pt-2">
+            <a class="btn" href={d.cta[1]}>{d.cta[0]}</a>
+            <a class="lnk" href={d.link[1]}>{d.link[0]}</a>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

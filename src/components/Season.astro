@@ -1,0 +1,99 @@
+---
+import { makeCluster, clusterSVG, stageColor } from '../lib/grape';
+import { sessions } from '../data/sessions';
+const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
+const first = clusterSVG(makeCluster(7, true), 0, { k: 1.2 });
+---
+<section id="season" class="bg-alt" data-base={base}>
+  <div class="season-pin flex min-h-[100svh] flex-col justify-center py-16 md:py-10">
+    <div class="wrap w-full">
+      <div class="flex flex-wrap items-end justify-between gap-4">
+        <div><p class="kicker">The season</p><h2 class="h2 mt-3">One cluster, six sessions</h2></div>
+        <p class="hidden font-mono text-[13px] text-muted md:block" id="season-hint">Scroll to move through the season</p>
+      </div>
+      <div class="mt-8 grid items-center gap-8 md:grid-cols-[3fr_4fr_2.4fr] md:gap-12">
+        <div aria-live="polite">
+          <p class="font-mono text-[13px] text-muted" id="s-sess">Session 1 of 6</p>
+          <p class="tabular mt-2 font-display text-[40px] font-bold leading-none tracking-head md:text-[56px]" id="s-date">{sessions[0].date}</p>
+          <p class="mt-3 text-[19px] font-semibold md:text-[22px]" id="s-stage" style={`color:${stageColor(0)}`}>{sessions[0].stage}</p>
+          <p class="mt-4 max-w-[34ch] text-[16px] leading-relaxed text-muted" id="s-text">{sessions[0].text}</p>
+        </div>
+        <svg id="s-cluster" viewBox="-95 -36 190 320" class="mx-auto h-[42svh] max-h-[460px] min-h-[260px] w-full" role="img" aria-label="Illustrated grape cluster at the current session" set:html={first}></svg>
+        <figure class="grid gap-2">
+          <p class="kicker">Actual data</p>
+          <img id="s-photo" src={base + sessions[0].photo} alt="Field photo of the same vines in this session" width="355" height="265" class="aspect-[4/3] w-full border border-line object-cover" loading="lazy" />
+          <figcaption class="font-mono text-[12px] text-muted" id="s-cap">Session 1 · same vines, field photo</figcaption>
+        </figure>
+      </div>
+      <div class="relative mt-10 h-16" id="s-timeline">
+        <div class="absolute inset-x-[3%] top-3 h-[2px]" style="background:linear-gradient(90deg,#B9CC70,#9EBB55 21%,#A7BA5E 40%,#7A3550 50%,#2B2F4A 61%,#2B2F4A)"></div>
+        {sessions.map((s, i) => (
+          <button type="button" class="s-node absolute top-3 grid -translate-x-1/2 justify-items-center" style={`left:${3 + i * 94 / 5}%`} data-i={i} aria-label={`Session ${i + 1}, ${s.date}`}>
+            <i class="-mt-2 block h-4 w-[2px] bg-muted"></i>
+            <span class="mt-2 whitespace-nowrap font-mono text-[11px] text-muted md:text-[12px]">{s.short}</span>
+          </button>
+        ))}
+      </div>
+      <label class="mt-2 flex items-center gap-4 text-[14px] text-muted" id="s-slider-wrap" for="s-slider">
+        Move through the season
+        <input id="s-slider" type="range" min="0" max="5" step="0.01" value="0" class="flex-1 accent-accent" />
+      </label>
+    </div>
+  </div>
+</section>
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { makeCluster, clusterSVG, stageColor } from '../lib/grape';
+  import { sessions } from '../data/sessions';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const root = document.getElementById('season')!;
+  const base = root.dataset.base!;
+  const one = makeCluster(7, true);
+  const $ = (id: string) => document.getElementById(id)!;
+  const svg = $('s-cluster'), slider = $('s-slider') as HTMLInputElement, photo = $('s-photo') as HTMLImageElement;
+  const nodes = Array.from(document.querySelectorAll<HTMLButtonElement>('.s-node'));
+  let last = -1, raf = 0, pending = 0;
+
+  function render(x: number) {
+    svg.innerHTML = clusterSVG(one, x, { k: 1.2 });
+    const i = Math.round(x);
+    $('s-stage').style.color = stageColor(x);
+    if (i !== last) {
+      last = i;
+      const s = sessions[i];
+      $('s-sess').textContent = `Session ${i + 1} of 6`;
+      $('s-date').textContent = s.date;
+      $('s-stage').textContent = s.stage;
+      $('s-text').textContent = s.text;
+      photo.src = base + s.photo;
+      $('s-cap').textContent = `Session ${i + 1} · same vines, field photo`;
+      nodes.forEach((n, k) => {
+        const on = k === i;
+        n.querySelector('i')!.className = on ? '-mt-3 block h-6 w-1 bg-accent' : '-mt-2 block h-4 w-[2px] bg-muted';
+        n.querySelector('span')!.classList.toggle('text-ink', on);
+        n.setAttribute('aria-current', on ? 'step' : 'false');
+      });
+    }
+  }
+  const set = (x: number) => { pending = x; if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(pending); }); };
+  render(0);
+  // preload the photos so switching is instant
+  sessions.forEach((s) => { const im = new Image(); im.src = base + s.photo; });
+
+  let st: ScrollTrigger | null = null;
+  const mm = gsap.matchMedia();
+  mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
+    $('s-slider-wrap').hidden = true;
+    st = ScrollTrigger.create({ trigger: root, pin: '.season-pin', start: 'top top', end: '+=420%', scrub: 0.4,
+      onUpdate: (self) => set(self.progress * 5) });
+    return () => { st = null; $('s-slider-wrap').hidden = false; };
+  });
+  slider.addEventListener('input', () => set(parseFloat(slider.value)));
+  nodes.forEach((n) => n.addEventListener('click', () => {
+    const i = Number(n.dataset.i);
+    if (st) window.scrollTo({ top: st.start + (i / 5) * (st.end - st.start), behavior: 'smooth' });
+    else { slider.value = String(i); set(i); }
+  }));
+</script>
