@@ -1,0 +1,126 @@
+---
+// Bird's-eye split map (after Fig. 3 of the paper) and the Husky A200 sensor layout (after Fig. 2).
+// Section positions along the rows are approximate, read off the paper's figure.
+const C = { train: '#4B2D6E', val: '#C08A1E', test: '#B5402F', ink: '#1E2220', muted: '#5B615D', line: '#D6DAD3', row: '#DCE3CF', rowOn: '#8FA66A', al: '#A9AEB4' };
+
+/* ---------- map ---------- */
+const X0 = 104, X1 = 960, M = (m: number) => X0 + ((X1 - X0) * m) / 120;
+const rowY = (r: number) => 30 + (r - 1) * 31;
+const track = [
+  { n: 4, row: 10, a: 1, b: 9, k: 'val' },
+  { n: 3, row: 10, a: 35, b: 43, k: 'train' },
+  { n: 2, row: 10, a: 72, b: 80, k: 'train' },
+  { n: 1, row: 10, a: 108, b: 116, k: 'train' },
+  { n: 5, row: 2, a: 110, b: 119, k: 'test' },
+] as const;
+const col = (k: string) => (C as Record<string, string>)[k];
+const map: string[] = [];
+for (let r = 1; r <= 10; r++) {
+  const y = rowY(r), on = r === 2 || r === 10;
+  map.push(`<rect x="${X0}" y="${y - 5}" width="${X1 - X0}" height="10" fill="${on ? C.rowOn : C.row}"/>`);
+  for (let m = 0; m <= 120; m += 6) map.push(`<rect x="${M(m) - 1}" y="${y - 7}" width="2" height="14" fill="${on ? '#6E5A3C' : '#C9C2B3'}"/>`);
+  map.push(`<text x="${X0 - 14}" y="${y + 4}" text-anchor="end" font-size="${on ? 15 : 13}" font-weight="${on ? 700 : 400}" fill="${on ? C.ink : C.muted}">Row ${r}</text>`);
+}
+// gap dimension between split 4 and split 3
+const gy = rowY(10) + 24;
+map.push(`<g stroke="${C.muted}" stroke-width="1"><line x1="${M(9)}" y1="${gy}" x2="${M(35)}" y2="${gy}"/><line x1="${M(9)}" y1="${gy - 5}" x2="${M(9)}" y2="${gy + 5}"/><line x1="${M(35)}" y1="${gy - 5}" x2="${M(35)}" y2="${gy + 5}"/></g>`);
+map.push(`<text x="${(M(9) + M(35)) / 2}" y="${gy + 17}" text-anchor="middle" font-size="13" fill="${C.muted}">gap: no shared frames</text>`);
+for (const s of track) {
+  const y = rowY(s.row), c = col(s.k), x = M(s.a), w = M(s.b) - M(s.a);
+  map.push(`<rect x="${x}" y="${y - 10}" width="${w}" height="20" fill="${c}"/>`);
+  const ly = s.row === 2 ? y - 34 : y - 44;
+  map.push(`<line x1="${x + w / 2}" y1="${ly + 20}" x2="${x + w / 2}" y2="${y - 10}" stroke="${c}" stroke-width="1.5"/>`);
+  map.push(`<rect x="${x + w / 2 - 11}" y="${ly}" width="22" height="20" fill="${c}"/><text x="${x + w / 2}" y="${ly + 15}" text-anchor="middle" font-size="14" font-weight="700" fill="#fff">${s.n}</text>`);
+}
+// GRAPE-Seg bar, row 2 split by distance
+const sy = rowY(10) + 62;
+map.push(`<text x="${X0 - 14}" y="${sy + 14}" text-anchor="end" font-size="13" fill="${C.muted}">Seg, row 2</text>`);
+for (const [a, b, k, t] of [[0, 72, 'train', 'Train 60%'], [72, 96, 'val', 'Val 20%'], [96, 120, 'test', 'Test 20%']] as const) {
+  map.push(`<rect x="${M(a)}" y="${sy}" width="${M(b) - M(a) - 2}" height="20" fill="${col(k)}" opacity=".85"/><text x="${(M(a) + M(b)) / 2}" y="${sy + 14}" text-anchor="middle" font-size="13" font-weight="600" fill="#fff">${t}</text>`);
+}
+const ty = sy + 42;
+for (let m = 0; m <= 120; m += 24) map.push(`<line x1="${M(m)}" y1="${ty - 6}" x2="${M(m)}" y2="${ty}" stroke="${C.muted}"/><text x="${M(m)}" y="${ty + 14}" text-anchor="middle" font-size="13" fill="${C.muted}" font-family="Red Hat Mono, monospace">${m} m</text>`);
+map.push(`<line x1="${X0}" y1="${ty - 6}" x2="${X1}" y2="${ty - 6}" stroke="${C.muted}"/>`);
+const mapH = ty + 26;
+
+/* ---------- rover ---------- */
+const R: string[] = [];
+const sensor = (x: number, y: number, c = C.ink) => `<rect x="${x - 7}" y="${y - 7}" width="14" height="14" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
+const lab = (x: number, y: number, t: string, a = 'start', w = 600) => `<text x="${x}" y="${y}" text-anchor="${a}" font-size="12.5" font-weight="${w}" fill="${C.ink}">${t}</text>`;
+// side view (seen from the row)
+R.push(`<text x="20" y="22" font-size="11" fill="${C.muted}" font-family="Red Hat Mono, monospace">Side view</text>`);
+R.push(`<line x1="20" y1="236" x2="500" y2="236" stroke="${C.line}"/>`);
+for (const x of [175, 335]) R.push(`<circle cx="${x}" cy="206" r="30" fill="${C.ink}"/><circle cx="${x}" cy="206" r="12" fill="#5B615D"/>`);
+R.push(`<rect x="130" y="166" width="250" height="34" fill="#E3B51D"/><rect x="130" y="160" width="250" height="8" fill="#2B2E33"/>`);
+R.push(`<rect x="170" y="150" width="200" height="8" fill="${C.al}"/>`);
+R.push(`<rect x="196" y="56" width="7" height="96" fill="${C.al}"/><rect x="266" y="86" width="7" height="66" fill="${C.al}"/>`);
+R.push(sensor(199, 56) + lab(184, 60, 'Cameras', 'end'));
+R.push(sensor(269, 86) + lab(286, 90, 'GNSS'));
+R.push(sensor(330, 144) + lab(346, 136, 'IMU'));
+// top view
+const T = 280;
+R.push(`<text x="20" y="${T}" font-size="11" fill="${C.muted}" font-family="Red Hat Mono, monospace">Top view</text>`);
+const by = T + 50; // body top
+for (const [x, y] of [[140, by - 16], [320, by - 16], [140, by + 150], [320, by + 150]]) R.push(`<rect x="${x}" y="${y}" width="70" height="20" fill="${C.ink}"/>`);
+R.push(`<rect x="130" y="${by}" width="270" height="154" fill="#F2F3EF" stroke="${C.ink}" stroke-width="2"/>`);
+R.push(`<rect x="190" y="${by + 30}" width="150" height="94" fill="none" stroke="${C.line}" stroke-width="1.5"/>`);
+// heading arrow
+R.push(`<line x1="300" y1="${T - 4}" x2="380" y2="${T - 4}" stroke="${C.muted}" stroke-width="1.5"/><polygon points="380,${T - 9} 390,${T - 4} 380,${T + 1}" fill="${C.muted}"/><text x="296" y="${T}" text-anchor="end" font-size="11" fill="${C.muted}">driving direction</text>`);
+// vine row along the bottom
+const rowTop = by + 236;
+R.push(`<rect x="20" y="${rowTop}" width="480" height="18" fill="${C.rowOn}"/>`);
+for (let x = 30; x < 500; x += 40) R.push(`<rect x="${x}" y="${rowTop - 2}" width="3" height="22" fill="#6E5A3C"/>`);
+R.push(`<text x="500" y="${rowTop + 36}" text-anchor="end" font-size="11" fill="${C.muted}">vine row (grape side)</text>`);
+// crossbar carrying the cameras
+const cx = 212;
+R.push(`<rect x="${cx - 4}" y="${by - 6}" width="8" height="${rowTop - by - 42}" fill="${C.al}"/>`);
+const d435 = by + 14, d405 = rowTop - 48;
+// fields of view towards the row
+R.push(`<polygon points="${cx},${d435} ${cx - 62},${rowTop} ${cx + 62},${rowTop}" fill="${C.train}" opacity=".08"/>`);
+R.push(`<polygon points="${cx},${d405} ${cx - 40},${rowTop} ${cx + 40},${rowTop}" fill="${C.train}" opacity=".16"/>`);
+R.push(sensor(cx, d435, C.train) + lab(cx + 16, d435 + 4, 'D435'));
+R.push(sensor(cx, d405, C.train) + lab(cx - 16, d405 + 4, 'D405', 'end'));
+// distance dimensions
+const dim = (x: number, y1: number, t: string) => `<g stroke="${C.muted}"><line x1="${x}" y1="${y1}" x2="${x}" y2="${rowTop}"/><line x1="${x - 4}" y1="${y1}" x2="${x + 4}" y2="${y1}"/><line x1="${x - 4}" y1="${rowTop}" x2="${x + 4}" y2="${rowTop}"/></g><text x="${x - 6}" y="${(y1 + rowTop) / 2 + 4}" text-anchor="end" font-size="12" fill="${C.ink}" font-family="Red Hat Mono, monospace">${t}</text>`;
+R.push(dim(96, d435, '0.8 m'), dim(142, d405, '0.5 m'));
+// GNSS pair and IMU
+R.push(sensor(300, by - 26) + lab(316, by - 22, 'GNSS left'));
+R.push(sensor(372, by + 128) + lab(356, by + 132, 'GNSS right', 'end'));
+R.push(sensor(300, by + 76) + lab(316, by + 80, 'IMU'));
+const roverH = rowTop + 46;
+---
+<section id="protocol" class="border-t border-line py-24 md:py-36">
+  <div class="wrap">
+    <p class="kicker">Split protocol</p>
+    <h2 class="h2 mt-4 max-w-[18ch]">Split by place, not by frame</h2>
+    <p class="mt-5 max-w-[64ch] text-[17px] leading-relaxed text-muted">Consecutive video frames look almost the same, so a random split leaks test images into training. GRAPE fixes five sections along two rows and keeps them physically apart: splits 1 to 3 train, split 4 validates, split 5 tests. The same five sections are used in all six sessions.</p>
+
+    <div class="mt-14 grid gap-16">
+      <figure class="min-w-0">
+        <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-[14px]">
+          <span class="flex items-center gap-2"><i class="inline-block h-3 w-3" style={`background:${C.train}`}></i>Train · splits 1–3</span>
+          <span class="flex items-center gap-2"><i class="inline-block h-3 w-3" style={`background:${C.val}`}></i>Validation · split 4</span>
+          <span class="flex items-center gap-2"><i class="inline-block h-3 w-3" style={`background:${C.test}`}></i>Test · split 5</span>
+        </div>
+        <div class="mt-5 overflow-x-auto border-t border-ink pt-6">
+          <svg viewBox={`0 0 990 ${mapH}`} class="min-w-[680px] w-full" role="img" aria-label="Bird's-eye map of ten vineyard rows, 120 metres long. GRAPE-Track uses split 5 for testing at the far end of row 2, and on row 10 split 4 for validation at the start, then splits 3, 2 and 1 for training, with gaps between them. GRAPE-Seg splits row 2 by distance: 60 percent train, 20 validation, 20 test." font-family="Red Hat Text, sans-serif" set:html={map.join('')}></svg>
+        </div>
+        <p class="mt-2 font-mono text-[12px] text-muted md:hidden">Swipe to see the full 120 m row →</p>
+        <figcaption class="mt-4 text-[14px] leading-relaxed text-muted">Bird's-eye view of the vineyard in Agliè. Rows are 3 m apart and 120 m long, and GRAPE-Track uses rows 2 and 10. Section positions are approximate, after Fig. 3 of the paper.</figcaption>
+      </figure>
+      <figure class="grid min-w-0 gap-10 border-t border-ink pt-8 md:grid-cols-[minmax(0,520px)_1fr] md:gap-16">
+        <svg viewBox={`0 0 520 ${roverH}`} class="w-full" role="img" aria-label="Side and top view of the Clearpath Husky A200. A mast holds two RealSense cameras facing the vine row: the D435 on the far side at about 0.8 metres from the row and the D405 on the near side at about 0.5 metres. A dual-antenna RTK GNSS sits on the left front and right rear, and the IMU is in the centre." font-family="Red Hat Text, sans-serif" set:html={R.join('')}></svg>
+        <figcaption class="min-w-0 self-center">
+          <p class="font-display text-[24px] font-bold tracking-head">Clearpath Husky A200</p>
+          <p class="mt-3 text-[15px] leading-relaxed text-muted">The rover drives the grape side of each row. A mast puts both cameras level with the fruit zone. Layout after Fig. 2 of the paper.</p>
+          <dl class="mt-6 grid grid-cols-[auto_1fr] gap-x-6 gap-y-3 border-t border-line pt-5 text-[14px]">
+            <dt class="font-semibold">RealSense D435</dt><dd class="text-muted">RGB-D, 640 × 480 at 30 fps, about 0.8 m from the row</dd>
+            <dt class="font-semibold">RealSense D405</dt><dd class="text-muted">Close-range RGB-D, 640 × 480 at 30 fps, about 0.5 m from the row</dd>
+            <dt class="font-semibold">Duro RTK GNSS</dt><dd class="text-muted">Dual antenna, position and heading at 5 Hz</dd>
+            <dt class="font-semibold">3DM-GX5 AHRS</dt><dd class="text-muted">Orientation at 100 Hz</dd>
+          </dl>
+        </figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
