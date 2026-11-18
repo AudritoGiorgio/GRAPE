@@ -4,72 +4,42 @@ import { links, paper } from '../data/site';
 const rover = heroRoverSVG();
 const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 ---
-<!-- Scroll hero: the row with the Husky → the rover's camera view with detections. GRAPE stays throughout.
-     Reduced motion (or no JS) shows the row scene only. -->
-<section id="top" class="relative">
-  <div class="hero-stage relative flex flex-col overflow-hidden bg-alt">
-    <div class="hero-copy wrap relative z-10 pb-6 pt-10 md:absolute md:top-[13%] md:w-[46%] md:max-w-none md:p-0">
-      <h1 class="hero-h1 font-display font-extrabold leading-[.82] tracking-display">GRAPE</h1>
-      <p class="hero-sub mt-5 max-w-[24ch] font-medium">Powering Autonomous Perception Across the Vineyard Life Cycle</p>
-      <div class="hero-cta mt-7 flex flex-wrap items-center gap-6 md:gap-7">
-        <a class="btn" href="#datasets">Get the dataset</a>
-        <a class="lnk" href={links.github}>View on GitHub →</a>
-      </div>
-      <p class="hero-status mt-8 font-mono text-[13px] font-medium text-muted md:mt-[6vh]">{paper.status}{links.preprint && <> · <a class="lnk" href={links.preprint}>Read the preprint</a></>}</p>
+<section id="top" class="relative flex flex-col">
+  <!-- one heading and one set of buttons: above the picture on phones, over it from md up -->
+  <div class="hero-copy wrap pb-8 pt-10 md:absolute md:top-[11%] md:z-10 md:w-[52%] md:max-w-none md:p-0">
+    <h1 class="hero-h1 font-display font-extrabold leading-[.82] tracking-display">GRAPE</h1>
+    <p class="hero-sub mt-5 max-w-[24ch] font-medium">Powering Autonomous Perception Across the Vineyard Life Cycle</p>
+    <div class="hero-cta mt-7 flex flex-wrap items-center gap-6 md:gap-7">
+      <a class="btn" href="#datasets">Get the dataset</a>
+      <a class="hero-gh inline-flex items-center gap-1 text-[15px] font-semibold underline decoration-1 underline-offset-[6px] hover:decoration-2" href={links.github}>View on GitHub →</a>
     </div>
-    <div class="hero-art relative min-h-0 flex-1 md:absolute md:inset-0">
-      <div class="layer l-scene">
-        <img src={base + 'hero-scene.svg'} alt="The Husky rover driving down a vineyard row between ripening grape clusters" class="absolute inset-0 h-full w-full object-cover" width="1600" height="900" fetchpriority="high" decoding="async" />
-        <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" class="pointer-events-none absolute inset-0 h-full w-full" set:html={rover}></svg>
-      </div>
-      <div class="layer l-cam" aria-hidden="true">
-        <img src={base + 'hero-camera.svg'} alt="" class="absolute inset-0 h-full w-full object-cover" style="object-position:70% 40%" width="1600" height="900" decoding="async" />
-        <p class="cam-cap absolute bottom-[5%] left-[5%] font-mono text-[12px] text-muted md:text-[13px]">What the rover sees · detection and tracking</p>
-      </div>
-    </div>
+  </div>
+  <div class="relative w-full overflow-hidden" style="aspect-ratio:16/9;max-height:calc(100svh - 64px)">
+    <img src={base + 'hero-scene.svg'} alt="A Clearpath Husky robot with a sensor mast drives down a vineyard row, ripe grape clusters hanging on both sides" class="absolute inset-0 h-full w-full object-cover" width="1600" height="900" fetchpriority="high" decoding="async" />
+    <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" set:html={rover}></svg>
+    <p class="edge-left absolute bottom-[4.5%] hidden font-mono text-[13px] font-medium md:block">{paper.status}{links.preprint && <> · <a class="lnk" href={links.preprint}>Read the preprint</a></>}</p>
   </div>
 </section>
 <style>
-  .hero-stage { height: calc(100svh - 64px); min-height: 560px; }
-  .layer { position: absolute; inset: 0; width: 100%; height: 100%; }
-  .l-cam { opacity: 0; visibility: hidden; }
   .hero-h1 { font-size: 22vw; }
   .hero-sub { font-size: 19px; line-height: 1.3; }
+  .hero-gh { color: #1E2220; }
   @media (min-width: 768px) {
-    .hero-stage { min-height: 600px; }
     .hero-copy { left: calc(max(0px, (100% - 1240px) / 2) + 40px); }
     .hero-h1 { font-size: min(11.5vw, 21svh); margin-left: -.04em; }
     .hero-sub { margin-top: 2.2vw; font-size: clamp(17px, min(1.75vw, 3.3svh), 32px); line-height: 1.22; }
     .hero-cta { margin-top: 2.4vw; }
+    /* over the artwork: white text with a soft dark halo so it stays legible on the pale sky */
+    .hero-gh { color: #fff; text-shadow: 0 1px 2px rgba(20,22,21,.75), 0 0 10px rgba(20,22,21,.45); }
   }
 </style>
 <script>
   import { gsap } from 'gsap';
   import { ScrollTrigger } from 'gsap/ScrollTrigger';
   gsap.registerPlugin(ScrollTrigger);
-  const root = document.getElementById('top')!;
   const mm = gsap.matchMedia();
   mm.add('(prefers-reduced-motion: no-preference)', () => {
-    const tl = gsap.timeline({
-      defaults: { ease: 'none' },
-      scrollTrigger: { trigger: root, start: 'top 64px', end: () => '+=' + Math.round(window.innerHeight * 1.8), pin: true, scrub: 0.5, invalidateOnRefresh: true, anticipatePin: 1 },
-    });
-    // the GRAPE title stays through every stage; only the rest of the copy leaves
-    tl.to(['.hero-sub', '.hero-cta', '.hero-status'], { autoAlpha: 0, y: -30, duration: 0.22, stagger: 0.02 }, 0.04);
-    // phones: the picture sits under the text, so it grows to the full stage as the text leaves
-    if (window.matchMedia('(max-width: 767px)').matches) {
-      const art = root.querySelector<HTMLElement>('.hero-art')!, copy = root.querySelector<HTMLElement>('.hero-copy')!;
-      gsap.set(art, { position: 'absolute', left: 0, right: 0, bottom: 0, top: copy.offsetHeight });
-      tl.to(art, { top: 0, duration: 0.26 }, 0.04);
-    }
-    tl
-      .fromTo('#hero-rover', { y: 0, scale: 1 }, { y: 30, scale: 1.08, transformOrigin: '50% 100%', duration: 0.5 }, 0.1)
-      .to('.l-scene', { scale: 1.25, transformOrigin: '62% 55%', duration: 0.5, ease: 'power2.in' }, 0.2)
-      .to('.l-scene', { autoAlpha: 0, duration: 0.14 }, 0.6)
-      .fromTo('.l-cam', { autoAlpha: 0, scale: 1.1 }, { autoAlpha: 1, scale: 1, duration: 0.18, ease: 'power2.out' }, 0.58)
-      .to('.hero-h1', { scale: 0.5, transformOrigin: '0% 0%', duration: 0.16, ease: 'power2.out' }, 0.6)
-      .fromTo('.cam-cap', { autoAlpha: 0, y: 10 }, { autoAlpha: 1, y: 0, duration: 0.1 }, 0.72)
-      .to({}, { duration: 0.3 });
-    return () => tl.scrollTrigger?.kill();
+    gsap.to('#hero-rover', { y: 26, scale: 1.06, transformOrigin: '50% 100%', ease: 'none',
+      scrollTrigger: { trigger: '#top', start: 'top top', end: 'bottom top', scrub: true } });
   });
 </script>
