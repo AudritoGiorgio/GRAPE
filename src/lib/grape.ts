@@ -40,7 +40,7 @@ export const stageColor = (x: number) => toS(berryRGB({ v: 2.4, j: 0.5 }, x));
 
 /* cluster model: length, width, berry size, looseness and visible count change per session */
 const P = {
-  L: [168, 200, 228, 250, 268, 284], R: [27, 33, 39, 44, 48, 52], r: [3.4, 5, 6.6, 8, 9.3, 10.4],
+  L: [168, 196, 216, 228, 238, 246], R: [26, 32, 41, 50, 58, 64], r: [3.4, 5, 6.6, 8, 9.3, 10.4],
   sp: [1.24, 1.14, 1.04, 0.98, 0.95, 0.94], n: [0.55, 0.72, 0.86, 0.95, 1, 1],
 };
 const at = (a: number[], x: number) => { const i = Math.min(4, Math.floor(x)), f = x - i; return a[i] + (a[i + 1] - a[i]) * f; };
@@ -53,15 +53,22 @@ export function makeCluster(seed: number, plain = false): Cluster {
   if (c.wing) for (let i = 0; i < 24; i++) sl.push({ lobe: 1, t: r(), th: r() * 6.283, u: 0.3 + 0.7 * Math.sqrt(r()), dy: r() - 0.5, p: r(), v: 2.1 + r() * 0.65, j: r() });
   return c;
 }
-const prof = (t: number) => (t < 0.16 ? 0.6 + 2.5 * t : Math.max(0.12, 1 - 0.8 * Math.pow((t - 0.16) / 0.84, 1.15)));
+// young clusters: slim, tapering and curved ("banana"); mature: broad shoulders and a full, rounded cone
+const profY = (t: number) => (t < 0.16 ? 0.6 + 2.5 * t : Math.max(0.12, 1 - 0.8 * Math.pow((t - 0.16) / 0.84, 1.15)));
+const profM = (t: number) => (t < 0.13 ? 0.6 + 4.2 * t : Math.max(0.16, 1.15 * (1 - 0.86 * Math.pow((t - 0.13) / 0.87, 1.05))));
+const mat = (x: number) => { const m = Math.max(0, Math.min(1, (x - 1.4) / 2.8)); return m * m * (3 - 2 * m); };
+const prof = (t: number, m: number) => profY(t) + (profM(t) - profY(t)) * m;
 
 function bpos(c: Cluster, b: Slot, x: number) {
-  const L = at(P.L, x) * c.ls, R = at(P.R, x) * c.ws, sp = at(P.sp, x), rb = at(P.r, x);
+  const L = at(P.L, x) * c.ls, R = at(P.R, x) * c.ws, sp = at(P.sp, x), rb = at(P.r, x), m = mat(x);
+  const bend = c.bend * (1 - 0.8 * m), wl = c.wl * (0.8 + 0.3 * m);
   let ax: number, ay: number, rad: number;
-  if (b.lobe === 0) { ax = c.bend * L * Math.sin(Math.PI * b.t); ay = b.t * L; rad = R * prof(b.t); }
-  else { ax = c.side * (R * 0.7 + R * 1.1 * b.t * c.wl); ay = (0.06 + 0.24 * b.t * c.wl) * L; rad = R * 0.42 * (1 - 0.45 * b.t); }
-  const z = Math.cos(b.th);
-  return { x: ax + rad * b.u * Math.sin(b.th) * sp, y: ay + b.dy * rb * 1.3 * sp + rad * b.u * z * 0.22, z, ax, ay };
+  if (b.lobe === 0) {
+    ax = bend * L * Math.sin(Math.PI * b.t) + c.side * R * 0.12 * m * Math.sin(Math.PI * Math.min(1, b.t * 1.6));
+    ay = b.t * L; rad = R * prof(b.t, m);
+  } else { ax = c.side * (R * (0.7 - 0.15 * m) + R * (1.05 - 0.35 * m) * b.t * wl); ay = (0.06 + (0.22 + 0.3 * m) * b.t * wl) * L; rad = R * (0.42 + 0.16 * m) * (1 - 0.45 * b.t); }
+  const z = Math.cos(b.th), u = b.u + (0.5 + 0.5 * b.u - b.u) * m; // ripe clusters pack berries to the surface
+  return { x: ax + rad * u * Math.sin(b.th) * sp, y: ay + b.dy * rb * 1.3 * sp + rad * u * z * 0.22, z, ax, ay };
 }
 
 export type ClusterOpts = { simple?: boolean; sparse?: boolean; k?: number };
@@ -69,15 +76,16 @@ export type ClusterOpts = { simple?: boolean; sparse?: boolean; k?: number };
 /** Inner SVG markup for one cluster, origin at the top of the stem. */
 export function clusterSVG(c: Cluster, x: number, o: ClusterOpts = {}): string {
   const L = at(P.L, x) * c.ls, R = at(P.R, x) * c.ws, rb = at(P.r, x), nf = at(P.n, x) * c.dn;
+  const m = mat(x), bend = c.bend * (1 - 0.8 * m), wl = c.wl * (0.8 + 0.3 * m);
   const detail = !o.simple, k = o.k ?? 1;
   const late = Math.max(0, Math.min(1, (x - 2.4) / 1.2)), stem = x < 2.6 ? '#7E8C48' : '#6E5A3C';
   const out: string[] = [];
   const pts: string[] = [];
-  for (let i = 0; i <= 12; i++) { const t = i / 12; pts.push(`${f1(c.bend * L * Math.sin(Math.PI * t))},${f1(t * L * 0.94)}`); }
+  for (let i = 0; i <= 12; i++) { const t = i / 12; pts.push(`${f1(bend * L * Math.sin(Math.PI * t) + c.side * R * 0.12 * m * Math.sin(Math.PI * Math.min(1, t * 1.6)))},${f1(t * L * 0.94)}`); }
   out.push(`<path d="M0,-30 Q3,-14 0,0 L${pts.join(' L')}" fill="none" stroke="${stem}" stroke-width="${f2(3.4 * k)}" stroke-linecap="round" stroke-linejoin="round"/>`);
   if (c.wing) {
-    const wx = c.side * R * (0.7 + 1.1 * c.wl);
-    out.push(`<path d="M0,${f1(0.04 * L)} Q${f1(wx * 0.55)},${f1(0.03 * L)} ${f1(wx)},${f1((0.06 + 0.24 * c.wl) * L)}" fill="none" stroke="${stem}" stroke-width="${f2(2.4 * k)}"/>`);
+    const wx = c.side * R * (0.7 - 0.15 * m + (1.05 - 0.35 * m) * wl);
+    out.push(`<path d="M0,${f1(0.04 * L)} Q${f1(wx * 0.5)},${f1(0.03 * L)} ${f1(wx * 0.85)},${f1((0.06 + (0.22 + 0.3 * m) * wl * 0.85) * L)}" fill="none" stroke="${stem}" stroke-width="${f2(2.4 * k)}"/>`);
   }
   const lim = o.sparse ? nf * 0.5 : nf;
   const vis: [Slot, ReturnType<typeof bpos>, number][] = [];

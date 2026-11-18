@@ -5,27 +5,27 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
 const first = clusterSVG(makeCluster(7, true), 0, { k: 1.2 });
 ---
 <section id="season" class="bg-alt" data-base={base}>
-  <div class="season-pin flex min-h-[100svh] flex-col justify-center py-16 md:py-10">
+  <div class="season-pin flex min-h-[100svh] flex-col justify-center pb-6 pt-[72px] md:py-10">
     <div class="wrap w-full">
       <div class="flex flex-wrap items-end justify-between gap-4">
         <div><p class="kicker">The season</p><h2 class="h2 mt-3">One cluster, six sessions</h2></div>
-        <p class="hidden font-mono text-[13px] text-muted md:block" id="season-hint">Scroll to move through the season</p>
+        <p class="font-mono text-[12px] text-muted md:text-[13px]" id="season-hint" hidden>Scroll to move through the season</p>
       </div>
-      <div class="mt-8 grid items-center gap-8 md:grid-cols-[3fr_4fr_2.4fr] md:gap-12">
-        <div aria-live="polite">
+      <div class="mt-5 grid grid-cols-[1.25fr_1fr] items-center gap-x-4 gap-y-4 md:mt-8 md:grid-cols-[3fr_4fr_2.4fr] md:gap-12">
+        <div aria-live="polite" class="col-span-2 md:col-span-1">
           <p class="font-mono text-[13px] text-muted" id="s-sess">Session 1 of 6</p>
-          <p class="tabular mt-2 font-display text-[40px] font-bold leading-none tracking-head md:text-[56px]" id="s-date">{sessions[0].date}</p>
-          <p class="mt-3 text-[19px] font-semibold md:text-[22px]" id="s-stage" style={`color:${stageColor(0)}`}>{sessions[0].stage}</p>
-          <p class="mt-4 max-w-[34ch] text-[16px] leading-relaxed text-muted" id="s-text">{sessions[0].text}</p>
+          <p class="tabular mt-1 font-display text-[30px] font-bold leading-none tracking-head md:mt-2 md:text-[56px]" id="s-date">{sessions[0].date}</p>
+          <p class="mt-2 text-[17px] font-semibold md:mt-3 md:text-[22px]" id="s-stage" style={`color:${stageColor(0)}`}>{sessions[0].stage}</p>
+          <p class="mt-2 max-w-[34ch] text-[14px] leading-snug text-muted md:mt-4 md:text-[16px] md:leading-relaxed" id="s-text">{sessions[0].text}</p>
         </div>
-        <svg id="s-cluster" viewBox="-112 -36 224 350" class="mx-auto h-[42svh] max-h-[460px] min-h-[260px] w-full" role="img" aria-label="Illustrated grape cluster at the current session" set:html={first}></svg>
+        <svg id="s-cluster" viewBox="-112 -36 224 350" class="mx-auto h-[36svh] max-h-[460px] min-h-[200px] w-full md:h-[42svh] md:min-h-[260px]" role="img" aria-label="Illustrated grape cluster at the current session" set:html={first}></svg>
         <figure class="grid gap-2">
           <p class="kicker">Actual data</p>
           <img id="s-photo" src={base + sessions[0].photo} alt="Field photo of the same vines in this session" width="355" height="265" class="aspect-[4/3] w-full border border-line object-cover" loading="lazy" />
           <figcaption class="font-mono text-[12px] text-muted" id="s-cap">Session 1 · same vines, field photo</figcaption>
         </figure>
       </div>
-      <div class="relative mt-10 h-16" id="s-timeline">
+      <div class="relative mt-5 h-12 md:mt-10 md:h-16" id="s-timeline">
         <div class="absolute inset-x-[3%] top-3 h-[2px]" style="background:linear-gradient(90deg,#B9CC70,#9EBB55 21%,#A7BA5E 40%,#7A3550 50%,#2B2F4A 61%,#2B2F4A)"></div>
         {sessions.map((s, i) => (
           <button type="button" class="s-node absolute top-3 grid -translate-x-1/2 justify-items-center" style={`left:${3 + i * 94 / 5}%`} data-i={i} aria-label={`Session ${i + 1}, ${s.date}`}>
@@ -84,11 +84,14 @@ const first = clusterSVG(makeCluster(7, true), 0, { k: 1.2 });
 
   let st: ScrollTrigger | null = null;
   const mm = gsap.matchMedia();
-  mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
+  // scroll-driven morph on every screen size; the slider stays only for reduced motion
+  ScrollTrigger.config({ ignoreMobileResize: true });
+  mm.add('(prefers-reduced-motion: no-preference)', () => {
+    $('season-hint').hidden = false;
     $('s-slider-wrap').hidden = true;
-    st = ScrollTrigger.create({ trigger: root, pin: '.season-pin', start: 'top top', end: '+=420%', scrub: 0.4,
+    st = ScrollTrigger.create({ trigger: root, pin: '.season-pin', start: 'top top', end: () => '+=' + Math.round(window.innerHeight * (window.innerWidth < 768 ? 3.6 : 4.2)), scrub: 0.4, invalidateOnRefresh: true,
       onUpdate: (self) => set(self.progress * 5) });
-    return () => { st = null; $('s-slider-wrap').hidden = false; };
+    return () => { st = null; $('s-slider-wrap').hidden = false; $('season-hint').hidden = true; };
   });
   slider.addEventListener('input', () => set(parseFloat(slider.value)));
   nodes.forEach((n) => n.addEventListener('click', () => {
