@@ -192,12 +192,11 @@ function roverSVG(): string {
   }
   // the two RealSense cameras on arms off the uprights, each looking outwards at its own row (D435 left, D405 right)
   for (const d of [-1, 1]) {
-    const w = d < 0 ? 104 : 90, cxo = d < 0 ? 520 : 1390, ax = d < 0 ? 600 : 1320, face = d < 0 ? cxo : cxo + w;
-    o.push(`<polygon points="${face},500 ${face + d * 300},380 ${face + d * 300},620" fill="#4B2D6E" opacity=".14"/>`);
-    o.push(`<rect x="${ax}" y="490" width="80" height="18" fill="#C9CDD1"/>`);
-    o.push(`<rect x="${cxo}" y="462" width="${w}" height="76" fill="#26282B"/><rect x="${cxo}" y="462" width="${w}" height="10" fill="#3A3D42"/>`);
-    o.push(`<rect x="${d < 0 ? face - 14 : face}" y="474" width="14" height="52" fill="#3A3D42"/>`);
-    for (const y of [486, 514]) o.push(`<circle cx="${face + d * 7}" cy="${y}" r="8" fill="#8FA3C4"/>`);
+    const w = d < 0 ? 52 : 45, cxo = d < 0 ? 610 : 1338, face = d < 0 ? cxo : cxo + w;
+    o.push(`<rect x="${d < 0 ? cxo + w : cxo - 10}" y="494" width="10" height="12" fill="#C9CDD1"/>`);
+    o.push(`<rect x="${cxo}" y="481" width="${w}" height="38" fill="#26282B"/>`);
+    o.push(`<rect x="${d < 0 ? face - 7 : face}" y="487" width="7" height="26" fill="#3A3D42"/>`);
+    for (const y of [493, 507]) o.push(`<circle cx="${face + d * 3.5}" cy="${y}" r="4" fill="#8FA3C4"/>`);
   }
   return `<g transform="scale(0.283) translate(-1000 -1130)">${o.join('')}</g>`;
 }
