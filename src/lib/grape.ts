@@ -113,21 +113,72 @@ export function clusterSVG(c: Cluster, x: number, o: ClusterOpts = {}): string {
   return out.join('');
 }
 
+/** The same cluster drawn on a canvas (for the live hero). Returns its bounding box in local units. */
+export function drawCluster(ctx: CanvasRenderingContext2D, c: Cluster, x: number, o: ClusterOpts = {}): [number, number, number, number] {
+  const L = at(P.L, x) * c.ls, R = at(P.R, x) * c.ws, rb = at(P.r, x), nf = at(P.n, x) * c.dn;
+  const m = mat(x), bend = c.bend * (1 - 0.8 * m), wl = c.wl * (0.8 + 0.3 * m);
+  const detail = !o.simple, k = o.k ?? 1;
+  const late = Math.max(0, Math.min(1, (x - 2.4) / 1.2)), stem = x < 2.6 ? '#7E8C48' : '#6E5A3C';
+  const a0 = ctx.globalAlpha;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.strokeStyle = stem;
+  ctx.beginPath(); ctx.moveTo(0, -30); ctx.quadraticCurveTo(3, -14, 0, 0);
+  for (let i = 0; i <= 12; i++) { const t = i / 12; ctx.lineTo(bend * L * Math.sin(Math.PI * t) + c.side * R * 0.12 * m * Math.sin(Math.PI * Math.min(1, t * 1.6)), t * L * 0.94); }
+  ctx.lineWidth = 3.4 * k; ctx.stroke();
+  if (c.wing) {
+    const wx = c.side * R * (0.7 - 0.15 * m + (1.05 - 0.35 * m) * wl);
+    ctx.beginPath(); ctx.moveTo(0, 0.04 * L); ctx.quadraticCurveTo(wx * 0.5, 0.03 * L, wx * 0.85, (0.06 + (0.22 + 0.3 * m) * wl * 0.85) * L);
+    ctx.lineWidth = 2.4 * k; ctx.stroke();
+  }
+  const lim = o.sparse ? nf * 0.5 : nf;
+  const vis: [Slot, ReturnType<typeof bpos>, number][] = [];
+  for (const b of c.sl) { if (b.p > lim) continue; vis.push([b, bpos(c, b, x), lim >= 0.999 ? 1 : Math.min(1, (lim - b.p) / 0.04)]); }
+  if (detail) {
+    ctx.lineWidth = 0.9 * k;
+    for (const [, q, a] of vis) { ctx.globalAlpha = a0 * a; ctx.beginPath(); ctx.moveTo(q.ax, q.ay); ctx.lineTo(q.x, q.y); ctx.stroke(); }
+  }
+  vis.sort((a, b) => a[1].z - b[1].z);
+  const rm = o.sparse ? 1.35 : 1, strokeA = 0.12 + 0.2 * late;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  ctx.lineWidth = 0.6 * k; ctx.strokeStyle = `rgba(0,0,0,${strokeA.toFixed(2)})`;
+  for (const [b, q, a] of vis) {
+    const rr = rb * rm * (0.88 + 0.2 * b.j) * (0.9 + 0.1 * q.z);
+    ctx.globalAlpha = a0 * a;
+    ctx.fillStyle = toS(mixA(berryRGB(b, x), BLK, Math.max(0, -q.z) * 0.3));
+    ctx.beginPath(); ctx.arc(q.x, q.y, rr, 0, 6.2832); ctx.fill();
+    if (detail) ctx.stroke();
+    if (a > 0.5) { x0 = Math.min(x0, q.x - rr); x1 = Math.max(x1, q.x + rr); y0 = Math.min(y0, q.y - rr); y1 = Math.max(y1, q.y + rr); }
+    if (detail && q.z > -0.2) {
+      if (late < 1) { ctx.globalAlpha = a0 * 0.5 * (1 - late) * a; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(q.x - rr * 0.32, q.y - rr * 0.34, rr * 0.24, 0, 6.2832); ctx.fill(); }
+      if (late > 0) { ctx.globalAlpha = a0 * 0.3 * late * a; ctx.fillStyle = '#9AA4C4'; ctx.beginPath(); ctx.ellipse(q.x - rr * 0.15, q.y - rr * 0.2, rr * 0.62, rr * 0.5, 0, 0, 6.2832); ctx.fill(); }
+    }
+  }
+  ctx.globalAlpha = a0;
+  return [x0, y0, x1, y1];
+}
+
 /* ---------- hero: looking down the row, rover driving towards us, ripe fruit on both sides ---------- */
-const LEAF = ['#557A35', '#4A6E2E', '#6A8C40', '#3E5F27', '#7E9C4E', '#5F8238'];
+export const LEAF = ['#557A35', '#4A6E2E', '#6A8C40', '#3E5F27', '#7E9C4E', '#5F8238'];
 const VPx = 1067, VPy = 500, HX = 4;
 
 type RowOpts = { top: number; fruit: number; gr: number; q: number; n: number; leaves: number; cs: number; seed: number; lsz?: number };
 
-function rowSVG(side: 'L' | 'R', o: RowOpts, rr: () => number): string {
+/** Things the live hero draws on its canvas instead of in the static picture. */
+export type HeroItem =
+  | { k: 'c'; x: number; y: number; rot: number; sc: number; seed: number; hx: number; simple: boolean; sparse: boolean; kk: number; p: number }
+  | { k: 'l'; x: number; y: number; r: number; s: number; ci: number };
+
+function rowSVG(side: 'L' | 'R', o: RowOpts, rr: () => number, sink?: HeroItem[]): string {
   const edge = side === 'L' ? 0 : 1600;
   const band = (x: number) => { const f = side === 'L' ? x / VPx : (1600 - x) / 533; return { t: lerp(o.top, VPy, f), f: lerp(o.fruit, VPy, f), g: lerp(o.gr, VPy, f) }; };
   const e = band(edge), out: string[] = [];
   for (const p of [0.1, 0.42, 0.66]) out.push(`<line x1="${edge}" y1="${f1(lerp(e.t, e.g, p))}" x2="${VPx}" y2="${VPy}" stroke="#1E2220" stroke-opacity=".3" stroke-width="1.2"/>`);
   out.push(`<polygon points="${edge},${f1(e.t + (e.g - e.t) * 0.02)} ${VPx},${VPy} ${edge},${f1(e.f + (e.g - e.f) * 0.06)}" fill="#3E5C2A"/>`);
   const xs = (k: number) => (side === 'L' ? VPx * (1 - Math.pow(o.q, k)) : VPx + 533 * Math.pow(o.q, k));
-  const leaf = (x: number, y: number, s: number) =>
-    `<use href="#lf" transform="translate(${f1(x)} ${f1(y)}) rotate(${Math.round(rr() * 360)}) scale(${f2(s)})" fill="${LEAF[Math.floor(rr() * LEAF.length)]}"/>`;
+  const leaf = (x: number, y: number, s: number, front = false) => {
+    const r = Math.round(rr() * 360), ci = Math.floor(rr() * LEAF.length);
+    if (front && sink) { sink.push({ k: 'l', x: +f1(x), y: +f1(y), r, s: +f2(s), ci }); return ''; }
+    return `<use href="#lf" transform="translate(${f1(x)} ${f1(y)}) rotate(${r}) scale(${f2(s)})" fill="${LEAF[ci]}"/>`;
+  };
   for (let k = o.n - 1; k >= 0; k--) {
     const x = xs(k), b = band(x), h = b.g - b.t, span = xs(k + 1) - x;
     out.push(`<line x1="${f1(x)}" y1="${f1(b.f)}" x2="${f1(x + (rr() - 0.5) * h * 0.03)}" y2="${f1(b.g)}" stroke="#6B5844" stroke-width="${f2(Math.max(0.6, h * 0.012))}"/>`);
@@ -142,13 +193,15 @@ function rowSVG(side: 'L' | 'R', o: RowOpts, rr: () => number): string {
       if (sc < 0.025) continue;
       const cl = makeCluster(o.seed + k * 13 + c * 5);
       const cy = lerp(cb.t, cb.f, 0.86 + rr() * 0.12);
+      const hx = HX + (rr() - 0.5) * 0.6, co = { simple: sc < 0.3, sparse: sc < 0.14, k: Math.max(1, 0.6 / sc) };
+      if (sink) { sink.push({ k: 'c', x: +f1(cx), y: +f1(cy), rot: +f1(cl.rot), sc: +sc.toFixed(3), seed: o.seed + k * 13 + c * 5, hx: +f2(hx), simple: co.simple, sparse: co.sparse, kk: +f2(co.k), p: +f1(cb.g - VPy) }); continue; }
       out.push(`<g transform="translate(${f1(cx)} ${f1(cy)}) rotate(${f1(cl.rot)}) scale(${sc.toFixed(3)})">`);
-      out.push(clusterSVG(cl, HX + (rr() - 0.5) * 0.6, { simple: sc < 0.3, sparse: sc < 0.14, k: Math.max(1, 0.6 / sc) }));
+      out.push(clusterSVG(cl, hx, co));
       out.push('</g>');
     }
     for (let i = 0; i < Math.round(o.leaves * 0.18); i++) {
       const fx = x + span * rr(), fb = band(fx), fh = fb.g - fb.t;
-      out.push(leaf(fx, lerp(fb.f - fh * 0.04, fb.f + fh * 0.05, rr()), fh * (0.04 + rr() * 0.025)));
+      out.push(leaf(fx, lerp(fb.f - fh * 0.04, fb.f + fh * 0.05, rr()), fh * (0.04 + rr() * 0.025), true));
     }
   }
   return out.join('');
@@ -203,11 +256,12 @@ function roverSVG(): string {
 
 /** The rover layer, drawn over the scene image with the same viewBox. */
 export function heroRoverSVG(): string {
-  return `<g id="hero-rover"><g transform="translate(880 606) scale(0.68)">${roverSVG()}</g></g>`;
+  return `<g id="hero-rover"><g id="hero-rover-pos" transform="translate(880 606) scale(0.68)">${roverSVG()}</g></g>`;
 }
 
 /** The static scene (everything except the rover), served as its own SVG file. */
-export function heroSceneSVG(): string {
+/** The static scene. With a sink, clusters, front leaves and the post are left out and listed there for the live canvas. */
+export function heroSceneSVG(sink?: HeroItem[]): string {
   const rr = rnd(11);
   const cx = 880, cy = 606, s = 0.68;
   const parts: string[] = [];
@@ -223,8 +277,8 @@ export function heroSceneSVG(): string {
   parts.push(`<line x1="${f1(cx - 62 * s * 1.6)}" y1="${cy}" x2="${VPx - 3}" y2="${VPy}" stroke="#8C8467" stroke-opacity=".45" stroke-width="4"/>`);
   parts.push(`<line x1="${f1(cx + 62 * s * 1.6)}" y1="${cy}" x2="${VPx + 3}" y2="${VPy}" stroke="#8C8467" stroke-opacity=".45" stroke-width="4"/>`);
   // same cluster scale constant on both rows keeps the perspective honest
-  parts.push(`<g>${rowSVG('L', { top: 455, fruit: 598, gr: 700, q: 0.86, n: 34, leaves: 30, lsz: 1.3, cs: 0.00085, seed: 800 }, rr)}</g>`);
-  parts.push(`<g>${rowSVG('R', { top: 28, fruit: 650, gr: 965, q: 0.8, n: 24, leaves: 16, cs: 0.00085, seed: 100 }, rr)}</g>`);
-  parts.push(`<polygon points="1488,-10 1522,-10 1612,910 1574,910" fill="#CBC5B8"/><polygon points="1488,-10 1497,-10 1584,910 1574,910" fill="#A39C8D"/>`);
+  parts.push(`<g>${rowSVG('L', { top: 455, fruit: 598, gr: 700, q: 0.86, n: 34, leaves: 30, lsz: 1.3, cs: 0.00085, seed: 800 }, rr, sink)}</g>`);
+  parts.push(`<g>${rowSVG('R', { top: 28, fruit: 650, gr: 965, q: 0.8, n: 24, leaves: 16, cs: 0.00085, seed: 100 }, rr, sink)}</g>`);
+  if (!sink) parts.push(`<polygon points="1488,-10 1522,-10 1612,910 1574,910" fill="#CBC5B8"/><polygon points="1488,-10 1497,-10 1584,910 1574,910" fill="#A39C8D"/>`);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">${parts.join('')}</svg>`;
 }
