@@ -71,7 +71,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
     const LOOP = 36, GROW = 30, HOLD = 34;           // seconds
     const ps = items.filter((d) => d.k === 'c' && d.sc > 0.08).map((d) => (d as { p: number }).p);
     const P0 = Math.min(...ps) - 1, P1 = Math.max(...ps) + 1;
-    const VP = [1067, 500], NEAR = [880, 606], RS = 0.68;
+    const VP = [1067, 500], NEAR = [1005, 606], RS = 0.68;
     let W = 0, H = 0, k = 1, ox = 0, oy = 0, dpr = 1;
     function size() {
       const r = art.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1);
@@ -90,7 +90,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
       const fade = s < 0.8 ? s / 0.8 : s > HOLD ? Math.max(0, 1 - (s - HOLD) / 1.2) : 1;
       const autumn = Math.max(0, Math.min(1, x - 4)) * (s > HOLD ? fade : 1);
       // rover: drives towards us down the aisle, constant speed in depth
-      const z = 4 - 3.1 * Math.min(1, s / HOLD), d = 1 / z;
+      const z = 4 - 2.95 * Math.min(1, s / HOLD), d = 1 / z;
       const rx = VP[0] + (NEAR[0] - VP[0]) * d, ry = VP[1] + (NEAR[1] - VP[1]) * d;
       pos.setAttribute('transform', `translate(${rx.toFixed(1)} ${ry.toFixed(1)}) scale(${(RS * d).toFixed(3)})`);
       pos.style.opacity = String(fade);

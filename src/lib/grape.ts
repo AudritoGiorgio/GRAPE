@@ -256,14 +256,14 @@ function roverSVG(): string {
 
 /** The rover layer, drawn over the scene image with the same viewBox. */
 export function heroRoverSVG(): string {
-  return `<g id="hero-rover"><g id="hero-rover-pos" transform="translate(880 606) scale(0.68)">${roverSVG()}</g></g>`;
+  return `<g id="hero-rover"><g id="hero-rover-pos" transform="translate(1005 606) scale(0.68)">${roverSVG()}</g></g>`;
 }
 
 /** The static scene (everything except the rover), served as its own SVG file. */
 /** The static scene. With a sink, clusters, front leaves and the post are left out and listed there for the live canvas. */
 export function heroSceneSVG(sink?: HeroItem[]): string {
   const rr = rnd(11);
-  const cx = 880, cy = 606, s = 0.68;
+  const cx = 1005, cy = 606, s = 0.68;
   const parts: string[] = [];
   parts.push(`<defs>
 <linearGradient id="hsky" x1="0" y1="0" x2="0" y2="500" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#FFFFFF"/><stop offset="1" stop-color="#EEE5CF"/></linearGradient>
@@ -274,8 +274,12 @@ export function heroSceneSVG(sink?: HeroItem[]): string {
   parts.push(`<path d="M0,500 L0,474 L80,458 L160,470 L250,446 L330,464 L420,450 L520,472 L610,460 L700,478 L800,468 L900,484 L1067,492 L1600,490 L1600,500Z" fill="#C9D2DB" opacity=".7"/>`);
   parts.push(`<rect y="500" width="1600" height="400" fill="url(#hgrass)"/>`);
   parts.push(`<polygon points="430,900 1270,900 1074,500 1060,500" fill="#E7E1CF" opacity=".9"/>`);
-  parts.push(`<line x1="${f1(cx - 62 * s * 1.6)}" y1="${cy}" x2="${VPx - 3}" y2="${VPy}" stroke="#8C8467" stroke-opacity=".45" stroke-width="4"/>`);
-  parts.push(`<line x1="${f1(cx + 62 * s * 1.6)}" y1="${cy}" x2="${VPx + 3}" y2="${VPy}" stroke="#8C8467" stroke-opacity=".45" stroke-width="4"/>`);
+  // soft worn wheel tracks in the soil, wide and faint so they read as ground, not rails
+  for (const d of [-1, 1]) {
+    const k = (900 - VPy) / (cy - VPy), bx = VPx + (cx + d * 62 * s * 1.6 - VPx) * k, hw = 30;
+    parts.push(`<polygon points="${VPx + d * 1},${VPy} ${f1(bx - hw)},900 ${f1(bx + hw)},900" fill="#D6CCB2" opacity=".55"/>`);
+  }
+  parts.push(`<polygon points="${VPx},${VPy} ${f1(VPx + (cx - VPx) * ((900 - VPy) / (cy - VPy)) - 40)},900 ${f1(VPx + (cx - VPx) * ((900 - VPy) / (cy - VPy)) + 40)},900" fill="#D9DEC4" opacity=".6"/>`);
   // same cluster scale constant on both rows keeps the perspective honest
   parts.push(`<g>${rowSVG('L', { top: 455, fruit: 598, gr: 700, q: 0.86, n: 34, leaves: 30, lsz: 1.3, cs: 0.00085, seed: 800 }, rr, sink)}</g>`);
   parts.push(`<g>${rowSVG('R', { top: 28, fruit: 650, gr: 965, q: 0.8, n: 24, leaves: 16, cs: 0.00085, seed: 100 }, rr, sink)}</g>`);
