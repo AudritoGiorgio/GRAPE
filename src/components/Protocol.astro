@@ -47,16 +47,25 @@ const mapH = ty + 26;
 const R: string[] = [];
 const sensor = (x: number, y: number, c = C.ink) => `<rect x="${x - 7}" y="${y - 7}" width="14" height="14" fill="#fff" stroke="${c}" stroke-width="2.5"/>`;
 const lab = (x: number, y: number, t: string, a = 'start', w = 600) => `<text x="${x}" y="${y}" text-anchor="${a}" font-size="12.5" font-weight="${w}" fill="${C.ink}">${t}</text>`;
-// side view (seen from the row)
+// side view (seen from the row), to scale: 0.25 px per mm, proportions from a photo of the rover
 R.push(`<text x="20" y="22" font-size="11" fill="${C.muted}" font-family="Red Hat Mono, monospace">Side view</text>`);
-R.push(`<line x1="20" y1="236" x2="500" y2="236" stroke="${C.line}"/>`);
-for (const x of [175, 335]) R.push(`<circle cx="${x}" cy="206" r="30" fill="${C.ink}"/><circle cx="${x}" cy="206" r="12" fill="#5B615D"/>`);
-R.push(`<rect x="130" y="166" width="250" height="34" fill="#E3B51D"/><rect x="130" y="160" width="250" height="8" fill="#2B2E33"/>`);
-R.push(`<rect x="170" y="150" width="200" height="8" fill="${C.al}"/>`);
-R.push(`<rect x="196" y="56" width="7" height="96" fill="${C.al}"/><rect x="266" y="86" width="7" height="66" fill="${C.al}"/>`);
-R.push(sensor(199, 56) + lab(184, 60, 'Cameras', 'end'));
-R.push(sensor(269, 86) + lab(286, 90, 'GNSS'));
-R.push(sensor(330, 144) + lab(346, 136, 'IMU'));
+const G = 236, XC = 255;
+R.push(`<line x1="20" y1="${G}" x2="500" y2="${G}" stroke="${C.line}"/>`);
+R.push(`<rect x="${XC - 116}" y="${G - 76}" width="232" height="54" fill="#E3B51D"/><rect x="${XC - 116}" y="${G - 30}" width="232" height="8" fill="#C49A10"/>`);
+for (const d of [-1, 1]) R.push(`<rect x="${d < 0 ? XC - 132 : XC + 116}" y="${G - 46}" width="16" height="8" fill="${C.ink}"/>`);
+for (const x of [XC - 64, XC + 64]) R.push(`<circle cx="${x}" cy="${G - 41}" r="41" fill="${C.ink}"/><circle cx="${x}" cy="${G - 41}" r="37" fill="none" stroke="#3A3D42" stroke-width="6" stroke-dasharray="7 6"/><circle cx="${x}" cy="${G - 41}" r="14" fill="#5B615D"/>`);
+R.push(`<rect x="${XC - 124}" y="${G - 85}" width="248" height="9" fill="#26282B"/>`);
+// mast, seen end-on: upright, top bar, Velodyne, GNSS antenna on its outrigger, camera housing
+R.push(`<rect x="${XC - 4}" y="${G - 170}" width="8" height="86" fill="${C.ink}"/><polygon points="${XC + 4},${G - 85} ${XC + 22},${G - 85} ${XC + 6},${G - 168}" fill="${C.al}"/>`);
+R.push(`<rect x="${XC - 10}" y="${G - 176}" width="20" height="8" fill="${C.ink}"/>`);
+// GNSS antennas sit on outriggers to each side, so from the side they peek out behind the Velodyne
+R.push(`<path d="M${XC - 26},${G - 178} Q${XC},${G - 198} ${XC + 26},${G - 178} Z" fill="#ECEEF0" stroke="#7D838A" stroke-width="1.5"/>`);
+R.push(`<rect x="${XC - 14}" y="${G - 196}" width="28" height="20" fill="#2F4F8F"/><rect x="${XC - 14}" y="${G - 183}" width="28" height="7" fill="${C.al}"/>`);
+R.push(`<rect x="${XC - 4}" y="${G - 160}" width="22" height="34" fill="#E3B51D" stroke="#C49A10" stroke-width="1.5"/>`);
+R.push(`<rect x="${XC + 24}" y="${G - 150}" width="5" height="64" fill="${C.ink}"/><rect x="${XC + 18}" y="${G - 160}" width="22" height="10" fill="#2B2E33"/>`);
+R.push(sensor(XC + 7, G - 143) + lab(XC - 16, G - 139, 'Cameras', 'end') + lab(XC + 22, G - 204, 'LiDAR', 'start', 500));
+R.push(sensor(XC - 34, G - 186) + lab(XC - 50, G - 182, 'GNSS', 'end'));
+R.push(sensor(XC + 70, G - 92) + lab(XC + 86, G - 96, 'IMU'));
 // top view: the rover drives between two rows; each camera looks sideways at its own row
 const T = 280;
 R.push(`<text x="20" y="${T}" font-size="11" fill="${C.muted}" font-family="Red Hat Mono, monospace">Top view</text>`);
@@ -69,17 +78,17 @@ const vineRow = (y: number, label: string, ly: number) => {
 };
 const rowA = T + 34;                 // vine row on the rover's left
 const d435 = rowA + 18 + 0.8 * PX;   // D435, 0.8 m from the left row
-const by = d435 + 14;                // body top
+const by = d435 + 30;                // body top
 const bh = 154;
-const d405 = by + bh + 22;           // D405 on the right end of the bar
+const d405 = by + bh + 34;           // D405 on the right end of the bar
 const rowB = d405 + 0.5 * PX;        // vine row on the rover's right
 vineRow(rowA, 'vine row, left side', rowA - 8);
 vineRow(rowB, 'vine row, right side', rowB + 36);
-for (const [x, y] of [[140, by - 16], [320, by - 16], [140, by + bh - 4], [320, by + bh - 4]]) R.push(`<rect x="${x}" y="${y}" width="70" height="20" fill="${C.ink}"/>`);
-R.push(`<rect x="130" y="${by}" width="270" height="${bh}" fill="#F2F3EF" stroke="${C.ink}" stroke-width="2"/>`);
-R.push(`<rect x="190" y="${by + 30}" width="150" height="94" fill="none" stroke="${C.line}" stroke-width="1.5"/>`);
+for (const [x, y] of [[166, by - 22], [288, by - 22], [166, by + bh - 4], [288, by + bh - 4]]) R.push(`<rect x="${x}" y="${y}" width="76" height="26" fill="${C.ink}"/>`);
+R.push(`<rect x="151" y="${by}" width="228" height="${bh}" fill="#F2F3EF" stroke="${C.ink}" stroke-width="2"/>`);
+R.push(`<rect x="180" y="${by + 30}" width="170" height="94" fill="none" stroke="${C.line}" stroke-width="1.5"/>`);
 // crossbar carrying the cameras, sticking out on both sides
-const cx = 212;
+const cx = 265;
 R.push(`<rect x="${cx - 4}" y="${d435 - 6}" width="8" height="${d405 - d435 + 12}" fill="${C.al}"/>`);
 // fields of view: D435 outwards to the left row, D405 outwards to the right row
 R.push(`<polygon points="${cx},${d435} ${cx - 58},${rowA + 18} ${cx + 58},${rowA + 18}" fill="${C.train}" opacity=".14"/>`);
@@ -91,9 +100,9 @@ const dim = (x: number, y1: number, y2: number, t: string) => `<g stroke="${C.mu
 R.push(dim(110, rowA + 18, d435, '0.8 m'), dim(110, d405, rowB, '0.5 m'));
 R.push(`<line x1="110" y1="${d435}" x2="${cx - 8}" y2="${d435}" stroke="${C.line}" stroke-dasharray="3 3"/><line x1="110" y1="${d405}" x2="${cx - 8}" y2="${d405}" stroke="${C.line}" stroke-dasharray="3 3"/>`);
 // GNSS pair and IMU
-R.push(sensor(372, by + 22) + lab(356, by + 26, 'GNSS left', 'end'));
-R.push(sensor(372, by + bh - 22) + lab(356, by + bh - 18, 'GNSS right', 'end'));
-R.push(sensor(300, by + 77) + lab(316, by + 81, 'IMU'));
+R.push(sensor(360, by + 22) + lab(344, by + 26, 'GNSS left', 'end'));
+R.push(sensor(360, by + bh - 22) + lab(344, by + bh - 18, 'GNSS right', 'end'));
+R.push(sensor(220, by + 77) + lab(204, by + 81, 'IMU', 'end'));
 const roverH = rowB + 48;
 ---
 <section id="protocol" class="border-t border-line py-24 md:py-36">

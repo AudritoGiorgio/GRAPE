@@ -155,23 +155,44 @@ function rowSVG(side: 'L' | 'R', o: RowOpts, rr: () => number): string {
 }
 
 function roverSVG(): string {
-  const al = '#A9AEB4', o: string[] = [];
-  o.push(`<ellipse cx="0" cy="4" rx="140" ry="14" fill="#1E2220" opacity=".2"/>`);
-  for (const [a, b] of [[-116, -80], [80, 116]]) o.push(`<rect x="${a + 4}" y="-68" width="${b - a - 8}" height="52" fill="#151618"/>`);
-  o.push(`<rect x="-48" y="-166" width="6" height="100" fill="${al}"/><rect x="42" y="-166" width="6" height="100" fill="${al}"/>`);
-  o.push(`<line x1="-45" y1="-88" x2="45" y2="-131" stroke="${al}" stroke-width="3"/>`);
-  o.push(`<rect x="-102" y="-170" width="204" height="6" fill="${al}"/><rect x="-117" y="-123" width="234" height="6" fill="${al}"/>`);
-  for (const x of [-94, 94]) o.push(`<rect x="${x - 2}" y="-180" width="4" height="10" fill="${al}"/><ellipse cx="${x}" cy="-184" rx="20" ry="6" fill="#ECEEF0" stroke="#7D838A" stroke-width="1.5"/>`);
-  for (const [x, lx] of [[-134, -128], [104, 128]]) o.push(`<rect x="${x}" y="-135" width="30" height="18" fill="#2B2E33"/><circle cx="${lx}" cy="-126" r="3.4" fill="#6A7A92"/>`);
-  o.push(`<rect x="-26" y="-92" width="52" height="20" fill="#3A3D42"/>`);
-  o.push(`<polygon points="-82,-74 82,-74 86,-64 -86,-64" fill="#26282B"/>`);
-  o.push(`<polygon points="-86,-64 86,-64 92,-12 -92,-12" fill="#E3B51D"/>`);
-  o.push(`<rect x="-66" y="-48" width="132" height="28" fill="#1F2124"/><rect x="-92" y="-14" width="184" height="9" fill="#C49A10"/>`);
-  for (const [a] of [[-130], [90]]) {
-    o.push(`<rect x="${a}" y="-58" width="40" height="64" fill="#1A1B1D"/>`);
-    for (let i = 0; i < 6; i++) o.push(`<rect x="${a + 3}" y="${-54 + i * 10}" width="34" height="3" fill="#35373B"/>`);
+  // front view of the Husky A200 with the GRAPE sensor mast, traced from a photo of the real rover
+  // (drawn in photo pixels, ground at y=1130, centre at x=1000, then scaled to the scene)
+  const al = '#C9CDD1', blk = '#1E2220', yl = '#E3B51D', o: string[] = [];
+  o.push(`<ellipse cx="1000" cy="1128" rx="540" ry="36" fill="#1E2220" opacity=".2"/>`);
+  // knobby tyres, nearly as tall as the body
+  for (const x of [540, 1275]) {
+    o.push(`<rect x="${x}" y="735" width="185" height="395" rx="46" fill="#151618"/>`);
+    for (let y = 770; y < 1110; y += 38) o.push(`<path d="M${x + 14},${y} L${x + 92},${y + 18} L${x + 171},${y}" stroke="#34363A" stroke-width="12" fill="none"/>`);
   }
-  return o.join('');
+  // yellow chassis, bumper
+  o.push(`<rect x="705" y="712" width="590" height="298" fill="${yl}"/><rect x="705" y="975" width="590" height="35" fill="#C49A10"/>`);
+  o.push(`<circle cx="790" cy="850" r="16" fill="none" stroke="${blk}" stroke-width="6"/><rect x="820" y="842" width="90" height="14" fill="${blk}" opacity=".75"/>`);
+  for (const x of [835, 1140]) o.push(`<rect x="${x}" y="880" width="26" height="60" fill="${blk}"/>`);
+  o.push(`<rect x="605" y="922" width="790" height="32" rx="16" fill="${blk}"/>`);
+  // black deck plate, wider than the chassis
+  o.push(`<polygon points="585,690 612,668 1388,668 1415,690 1415,708 585,708" fill="#26282B"/>`);
+  // front lidar puck on the deck
+  o.push(`<rect x="935" y="640" width="130" height="58" fill="#B8BCC2"/><path d="M955,640 A45,40 0 0 1 1045,640Z" fill="#2A3F6E"/>`);
+  // centre column with the RealSense
+  o.push(`<rect x="928" y="360" width="14" height="285" fill="${blk}"/><rect x="1052" y="360" width="14" height="285" fill="${blk}"/><rect x="898" y="345" width="215" height="26" fill="${blk}"/>`);
+  o.push(`<rect x="910" y="296" width="170" height="44" fill="#2B2E33"/>`);
+  for (const x of [948, 980, 1022]) o.push(`<circle cx="${x}" cy="318" r="9" fill="#6A7A92"/>`);
+  // mast: slanted aluminium uprights with black posts, top bar, GNSS outriggers
+  o.push(`<polygon points="652,668 692,668 724,212 702,212" fill="${al}"/><polygon points="1308,668 1348,668 1298,212 1276,212" fill="${al}"/>`);
+  o.push(`<rect x="702" y="212" width="14" height="440" fill="${blk}"/><rect x="1284" y="212" width="14" height="440" fill="${blk}"/>`);
+  o.push(`<rect x="585" y="198" width="830" height="24" fill="${blk}"/>`);
+  o.push(`<rect x="540" y="182" width="190" height="16" fill="${al}"/><rect x="1270" y="182" width="190" height="16" fill="${al}"/>`);
+  for (const x of [562, 1440]) o.push(`<rect x="${x - 6}" y="150" width="12" height="36" fill="${blk}"/><path d="M${x - 84},140 Q${x},86 ${x + 84},140 Z" fill="#ECEEF0" stroke="#7D838A" stroke-width="5"/><rect x="${x - 70}" y="138" width="140" height="14" fill="#A39C8D"/>`);
+  // Velodyne on top
+  o.push(`<rect x="945" y="118" width="110" height="80" fill="#2F4F8F"/><rect x="945" y="170" width="110" height="28" fill="#C9CDD1"/><ellipse cx="1000" cy="118" rx="55" ry="10" fill="#26282B"/><ellipse cx="1000" cy="98" rx="32" ry="9" fill="#26282B"/><rect x="994" y="98" width="12" height="20" fill="#26282B"/>`);
+  // side cameras in yellow housings, looking out to the rows
+  for (const x of [712, 1206]) {
+    o.push(`<rect x="${x}" y="285" width="88" height="145" fill="${yl}" stroke="#C49A10" stroke-width="4"/>`);
+    for (let y = 305; y < 420; y += 18) o.push(`<rect x="${x + (x < 1000 ? 30 : 10)}" y="${y}" width="48" height="7" fill="#C49A10"/>`);
+  }
+  // a few cables
+  o.push(`<path d="M780,250 C800,400 760,520 820,640 M1180,230 C1220,330 1240,500 1255,640 M880,330 C860,420 900,520 960,600" stroke="#111" stroke-width="5" fill="none"/>`);
+  return `<g transform="scale(0.283) translate(-1000 -1130)">${o.join('')}</g>`;
 }
 
 /** The rover layer, drawn over the scene image with the same viewBox. */
