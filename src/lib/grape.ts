@@ -114,7 +114,8 @@ export function clusterSVG(c: Cluster, x: number, o: ClusterOpts = {}): string {
 }
 
 /** The same cluster drawn on a canvas (for the live hero). Returns its bounding box in local units. */
-export function drawCluster(ctx: CanvasRenderingContext2D, c: Cluster, x: number, o: ClusterOpts = {}): [number, number, number, number] {
+/** With bb, also grows bb (device pixels: x0, y0, x1, y1) to the exact extent of the visible berries as drawn. */
+export function drawCluster(ctx: CanvasRenderingContext2D, c: Cluster, x: number, o: ClusterOpts = {}, bb?: number[]): [number, number, number, number] {
   const L = at(P.L, x) * c.ls, R = at(P.R, x) * c.ws, rb = at(P.r, x), nf = at(P.n, x) * c.dn;
   const m = mat(x), bend = c.bend * (1 - 0.8 * m), wl = c.wl * (0.8 + 0.3 * m);
   const detail = !o.simple, k = o.k ?? 1;
@@ -139,6 +140,7 @@ export function drawCluster(ctx: CanvasRenderingContext2D, c: Cluster, x: number
   vis.sort((a, b) => a[1].z - b[1].z);
   const rm = o.sparse ? 1.35 : 1, strokeA = 0.12 + 0.2 * late;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const M = ctx.getTransform(), ms = Math.hypot(M.a, M.b);
   ctx.lineWidth = 0.6 * k; ctx.strokeStyle = `rgba(0,0,0,${strokeA.toFixed(2)})`;
   for (const [b, q, a] of vis) {
     const rr = rb * rm * (0.88 + 0.2 * b.j) * (0.9 + 0.1 * q.z);
@@ -146,7 +148,10 @@ export function drawCluster(ctx: CanvasRenderingContext2D, c: Cluster, x: number
     ctx.fillStyle = toS(mixA(berryRGB(b, x), BLK, Math.max(0, -q.z) * 0.3));
     ctx.beginPath(); ctx.arc(q.x, q.y, rr, 0, 6.2832); ctx.fill();
     if (detail) ctx.stroke();
-    if (a > 0.5) { x0 = Math.min(x0, q.x - rr); x1 = Math.max(x1, q.x + rr); y0 = Math.min(y0, q.y - rr); y1 = Math.max(y1, q.y + rr); }
+    if (a > 0.5) {
+      x0 = Math.min(x0, q.x - rr); x1 = Math.max(x1, q.x + rr); y0 = Math.min(y0, q.y - rr); y1 = Math.max(y1, q.y + rr);
+      if (bb) { const sx = M.a * q.x + M.c * q.y + M.e, sy = M.b * q.x + M.d * q.y + M.f, sr = rr * ms; bb[0] = Math.min(bb[0], sx - sr); bb[1] = Math.min(bb[1], sy - sr); bb[2] = Math.max(bb[2], sx + sr); bb[3] = Math.max(bb[3], sy + sr); }
+    }
     if (detail && q.z > -0.2) {
       if (late < 1) { ctx.globalAlpha = a0 * 0.5 * (1 - late) * a; ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(q.x - rr * 0.32, q.y - rr * 0.34, rr * 0.24, 0, 6.2832); ctx.fill(); }
       if (late > 0) { ctx.globalAlpha = a0 * 0.3 * late * a; ctx.fillStyle = '#9AA4C4'; ctx.beginPath(); ctx.ellipse(q.x - rr * 0.15, q.y - rr * 0.2, rr * 0.62, rr * 0.5, 0, 0, 6.2832); ctx.fill(); }
@@ -187,7 +192,9 @@ function rowSVG(side: 'L' | 'R', o: RowOpts, rr: () => number, sink?: HeroItem[]
       const lx = x + span * rr(), bb = band(lx), hh = bb.g - bb.t;
       out.push(leaf(lx, lerp(bb.t - hh * 0.03, bb.f + hh * 0.03, Math.pow(rr(), 0.8)), hh * (0.045 + rr() * 0.03) * (o.lsz ?? 1)));
     }
-    const u = rr(), nc = u < 0.12 ? 0 : u < 0.45 ? 1 : u < 0.85 ? 2 : 3;
+    const u = rr(), want = u < 0.12 ? 0 : u < 0.45 ? 1 : u < 0.85 ? 2 : 3;
+    // no more clusters than fit side by side in this stretch, so each one stays clear of its neighbours
+    const csz = 105 * (band(x + span / 2).g - band(x + span / 2).t) * o.cs, nc = Math.min(want, Math.max(1, Math.floor(span / csz)));
     for (let c = 0; c < nc; c++) {
       const cx = x + span * ((c + 0.15 + rr() * 0.7) / Math.max(1, nc)), cb = band(cx), sc = (cb.g - cb.t) * o.cs;
       if (sc < 0.025) continue;

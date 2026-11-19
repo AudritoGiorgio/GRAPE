@@ -20,7 +20,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
     <img src={base + 'hero-scene.svg'} alt="A Clearpath Husky robot with a sensor mast drives down a vineyard row, ripe grape clusters hanging on both sides" class="absolute inset-0 h-full w-full object-cover" width="1600" height="900" fetchpriority="high" decoding="async" />
     <canvas class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
     <svg viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice" class="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" set:html={rover}></svg>
-    <p class="hero-date absolute bottom-[4.5%] right-[4%] hidden bg-white/80 px-2 py-1 font-mono text-[12px] font-medium md:text-[13px]" aria-hidden="true"></p>
+    <p class="hero-date absolute bottom-[4.5%] right-[4%] hidden bg-white/80 px-1.5 py-0.5 font-mono text-[10px] font-medium md:px-2 md:py-1 md:text-[13px]" aria-hidden="true"></p>
     <script type="application/json" id="hero-live" set:html={JSON.stringify(live)}></script>
     <p class="edge-left absolute bottom-[4.5%] hidden font-mono text-[13px] font-medium md:block">{paper.status}{links.preprint && <> · <a class="lnk" href={links.preprint}>Read the preprint</a></>}</p>
   </div>
@@ -39,28 +39,22 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
   }
 </style>
 <script>
-  import { gsap } from 'gsap';
-  import { ScrollTrigger } from 'gsap/ScrollTrigger';
   import { makeCluster, drawCluster, LEAF, type HeroItem, type Cluster } from '../lib/grape';
-  gsap.registerPlugin(ScrollTrigger);
-  const mm = gsap.matchMedia();
-  mm.add('(prefers-reduced-motion: no-preference)', () => {
-    gsap.to('#hero-rover', { y: 26, scale: 1.06, transformOrigin: '50% 100%', ease: 'none',
-      scrollTrigger: { trigger: '#top', start: 'top top', end: 'bottom top', scrub: true } });
-  });
-
   // Living hero: the season runs June → October and loops, the leaves and clusters sway in the wind,
-  // and the Husky drives up the row while detection boxes sweep over the clusters from far to near.
+  // and every cluster carries a detection box measured from its berries as drawn. The Husky stays put.
   // Reduced motion keeps the static picture; everything pauses while the hero is off screen.
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) startLive();
 
   function startLive() {
     const art = document.getElementById('hero-art')!;
     const img = art.querySelector('img')!, cv = art.querySelector('canvas')!, ctx = cv.getContext('2d')!;
-    const pos = document.getElementById('hero-rover-pos')!, date = art.querySelector<HTMLElement>('.hero-date')!;
+    const date = art.querySelector<HTMLElement>('.hero-date')!;
     const items = JSON.parse(document.getElementById('hero-live')!.textContent!) as HeroItem[];
-    type C = Extract<HeroItem, { k: 'c' }> & { cl: Cluster; flash: number; box?: number[] };
-    const list = items.map((d, i) => (d.k === 'c' ? { ...d, cl: makeCluster(d.seed), flash: -9, i } : { ...d, i })) as ((C | Extract<HeroItem, { k: 'l' }>) & { i: number })[];
+    type C = Extract<HeroItem, { k: 'c' }> & { cl: Cluster; id: number; bb: number[] };
+    const list = items.map((d, i) => (d.k === 'c' ? { ...d, cl: makeCluster(d.seed), id: 0, bb: [0, 0, 0, 0], i } : { ...d, i })) as ((C | Extract<HeroItem, { k: 'l' }>) & { i: number })[];
+    // stable track IDs, the largest (nearest) clusters first
+    const byNear = list.filter((d) => d.k === 'c').sort((a, b) => (b as C).sc - (a as C).sc) as C[];
+    byNear.forEach((d, n) => (d.id = n + 1));
     const leafPath = new Path2D('M0,-1 C.35,-.95 .55,-.6 .95,-.55 C.75,-.2 1,.15 .7,.45 C.45,.4 .3,.75 0,1 C-.3,.75 -.45,.4 -.7,.45 C-1,.15 -.75,-.2 -.95,-.55 C-.55,-.6 -.35,-.95 0,-1Z');
     const hex = (h: string) => [1, 3, 5].map((i) => parseInt(h.substr(i, 2), 16));
     const LF = LEAF.map(hex), AUT = ['#B8962E', '#A65A2E', '#C9A43B', '#9C4A2A', '#BFA040', '#A86B2C'].map(hex);
@@ -69,9 +63,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
     const dayOf = (x: number) => { const d = new Date(2024, 5, 27 + Math.round((x / 5) * 97)); return `${d.getDate()} ${MONTHS[d.getMonth() - 5]}`; };
 
     const LOOP = 36, GROW = 30, HOLD = 34;           // seconds
-    const ps = items.filter((d) => d.k === 'c' && d.sc > 0.08).map((d) => (d as { p: number }).p);
-    const P0 = Math.min(...ps) - 1, P1 = Math.max(...ps) + 1;
-    const VP = [1067, 500], NEAR = [1005, 606], RS = 0.68;
+    const MIN_H = 22, PAD = 1.5;                     // smallest box drawn (CSS px), gap between berries and box line
     let W = 0, H = 0, k = 1, ox = 0, oy = 0, dpr = 1;
     function size() {
       const r = art.getBoundingClientRect(); dpr = Math.min(2, devicePixelRatio || 1);
@@ -80,7 +72,7 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
     }
     size(); addEventListener('resize', size);
 
-    let t0 = performance.now(), last = 0, lastPr = 0, visible = true, raf = 0, ready = false;
+    let t0 = performance.now(), last = 0, visible = true, raf = 0, ready = false;
     function frame(now: number) {
       raf = requestAnimationFrame(frame);
       if (now - last < 33) return;                     // ~30 fps is plenty for slow ambient motion
@@ -89,53 +81,61 @@ const base = import.meta.env.BASE_URL.replace(/\/?$/, '/');
       const x = s < GROW ? (5 * s) / GROW : 5;          // season position, 0 = 27 Jun … 5 = 2 Oct
       const fade = s < 0.8 ? s / 0.8 : s > HOLD ? Math.max(0, 1 - (s - HOLD) / 1.2) : 1;
       const autumn = Math.max(0, Math.min(1, x - 4)) * (s > HOLD ? fade : 1);
-      // rover: drives towards us down the aisle, constant speed in depth
-      const z = 4 - 2.95 * Math.min(1, s / HOLD), d = 1 / z;
-      const rx = VP[0] + (NEAR[0] - VP[0]) * d, ry = VP[1] + (NEAR[1] - VP[1]) * d;
-      pos.setAttribute('transform', `translate(${rx.toFixed(1)} ${ry.toFixed(1)}) scale(${(RS * d).toFixed(3)})`);
-      pos.style.opacity = String(fade);
-      // the rover's cameras sweep the rows from the far end to the near one as it drives
-      const pr = P0 + (P1 - P0) * Math.pow(Math.min(1, s / HOLD), 1.3);
-      if (pr < lastPr) for (const it of list) if (it.k === 'c') it.flash = -9;
       img.style.filter = autumn > 0 ? `sepia(${(0.1 * autumn).toFixed(3)}) hue-rotate(${(-6 * autumn).toFixed(1)}deg) saturate(${(1 + 0.1 * autumn).toFixed(3)})` : '';
       date.textContent = `Season · ${dayOf(x)}`;
 
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
       ctx.setTransform(dpr * k, 0, 0, dpr * k, dpr * ox, dpr * oy);
-      for (const it of list) {
+      // leaves first, then the fruit: growers strip the fruit zone, so the clusters hang clear of the canopy
+      for (const pass of ['l', 'c'] as const) for (const it of list) {
+        if (it.k !== pass) continue;
         if (it.k === 'l') {
           const sw = Math.sin(t * 1.1 + it.i * 0.9) * 5 + Math.sin(t * 2.3 + it.i) * 2;
           ctx.save(); ctx.translate(it.x + Math.sin(t * 1.1 + it.i * 0.9) * it.s * 0.06, it.y); ctx.rotate(((it.r + sw) * Math.PI) / 180); ctx.scale(it.s, it.s);
           ctx.fillStyle = autumn > 0 ? mix(LF[it.ci], AUT[it.ci], autumn * 0.75) : LEAF[it.ci]; ctx.fill(leafPath); ctx.restore();
         } else {
-          const c = it as C;
-          if (c.sc > 0.08 && lastPr < c.p && c.p <= pr) c.flash = s;
-          const sw = Math.sin(t * 0.9 + c.i * 0.7) * 1.6;
+          const c = it as C, sw = Math.sin(t * 0.9 + c.i * 0.7) * 1.6;
           ctx.save(); ctx.translate(c.x, c.y); ctx.rotate(((c.rot + sw) * Math.PI) / 180); ctx.scale(c.sc, c.sc);
           ctx.globalAlpha = fade;
-          const b = drawCluster(ctx, c.cl, Math.min(5, x + (c.hx - 4) * 0.5), { simple: c.simple, sparse: c.sparse, k: c.kk });
+          // the box is measured from the berries exactly as drawn this frame, so it follows growth and sway
+          c.bb[0] = c.bb[1] = Infinity; c.bb[2] = c.bb[3] = -Infinity;
+          drawCluster(ctx, c.cl, Math.max(0, Math.min(5, x + (c.hx - 4) * 0.5)), { simple: c.simple, sparse: c.sparse, k: c.kk }, c.bb);
           ctx.restore();
-          if (s - c.flash < 2.4 && isFinite(b[0])) {
-            const a = (c.rot + sw) * Math.PI / 180, ca = Math.cos(a) * c.sc, sa = Math.sin(a) * c.sc;
-            const xs: number[] = [], ys: number[] = [];
-            for (const [px, py] of [[b[0], b[1]], [b[2], b[1]], [b[0], b[3]], [b[2], b[3]]]) { xs.push(c.x + px * ca - py * sa); ys.push(c.y + px * sa + py * ca); }
-            c.box = [Math.min(...xs) - 2, Math.min(...ys) - 2, Math.max(...xs) + 2, Math.max(...ys) + 2];
-          } else c.box = undefined;
         }
       }
       // the post in front of the right row
       ctx.fillStyle = '#CBC5B8'; ctx.beginPath(); ctx.moveTo(1488, -10); ctx.lineTo(1522, -10); ctx.lineTo(1612, 910); ctx.lineTo(1574, 910); ctx.fill();
       ctx.fillStyle = '#A39C8D'; ctx.beginPath(); ctx.moveTo(1488, -10); ctx.lineTo(1497, -10); ctx.lineTo(1584, 910); ctx.lineTo(1574, 910); ctx.fill();
-      // detection boxes, drawn in screen pixels so the line stays thin
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.strokeStyle = '#4B2D6E'; ctx.lineWidth = 2; ctx.font = '600 11px "Red Hat Mono", ui-monospace, monospace';
-      for (const it of list) if (it.k === 'c' && (it as C).box) {
-        const c = it as C, e = s - c.flash, a = e < 0.15 ? e / 0.15 : Math.max(0, 1 - (e - 1.2) / 1.2);
-        const [bx0, by0, bx1, by1] = c.box!.map((v, i) => (i % 2 ? oy + v * k : ox + v * k));
-        ctx.globalAlpha = a * fade; ctx.strokeRect(bx0, by0, bx1 - bx0, by1 - by0);
-        if (bx1 - bx0 > 34) { const tag = `id ${c.i % 97 + 3}`, tw = ctx.measureText(tag).width + 10; ctx.fillStyle = '#4B2D6E'; ctx.fillRect(bx0 - 1, by0 - 17, tw, 17); ctx.fillStyle = '#fff'; ctx.fillText(tag, bx0 + 4, by0 - 5); }
+      // detection boxes in screen pixels: one per cluster, tight around its visible berries
+      ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.strokeStyle = '#4B2D6E'; ctx.lineWidth = 1.5 * dpr;
+      ctx.font = `600 ${11 * dpr}px "Red Hat Mono", ui-monospace, monospace`; ctx.textBaseline = 'alphabetic';
+      ctx.globalAlpha = fade;
+      const drawn: number[][] = [], tags: number[][] = [];
+      const hit = (a: number[], b: number[]) => Math.max(0, Math.min(a[2], b[2]) - Math.max(a[0], b[0])) * Math.max(0, Math.min(a[3], b[3]) - Math.max(a[1], b[1]));
+      // the post's left edge in device pixels at screen height y (it runs from 1488,-10 to 1574,910 in scene units)
+      const postX = (y: number) => (ox + (1488 + ((y / dpr - oy) / k + 10) * (86 / 920)) * k) * dpr;
+      for (const c of byNear) {
+        const [x0, y0, x1, y1] = c.bb;
+        if (!isFinite(x0) || (y1 - y0) / dpr < MIN_H) continue;
+        // annotate what is visible: clip to the frame and to the post in front of the right row
+        const v = [Math.max(0, x0), Math.max(0, y0), Math.min(cv.width, x1, postX(y0), postX(y1)), Math.min(cv.height, y1)];
+        const area = (x1 - x0) * (y1 - y0);
+        if (v[2] <= v[0] || (v[2] - v[0]) * (v[3] - v[1]) < 0.5 * area) continue;    // mostly out of sight
+        if (drawn.some((d) => hit(d, v) > 0.6 * area)) continue;                     // hidden behind a nearer cluster
+        drawn.push(v);
+        const cut = [v[0] > x0, v[1] > y0, v[2] < x1, v[3] < y1];
+        const p = PAD * dpr, l = v[0] - (cut[0] ? 0 : p), tp = v[1] - (cut[1] ? 0 : p), r = v[2] + (cut[2] ? 0 : p), bt = v[3] + (cut[3] ? 0 : p);
+        const bx = Math.round(l) + 0.5, by = Math.round(tp) + 0.5, bw = Math.round(r - l), bh = Math.round(bt - tp);
+        ctx.strokeRect(bx, by, bw, bh);
+        if (bw / dpr > 36) {
+          const tag = `id ${c.id}`, tw = ctx.measureText(tag).width + 8 * dpr, tr = [bx - 0.75 * dpr, by - 15 * dpr, bx - 0.75 * dpr + tw, by];
+          if (tags.some((q) => hit(q, tr) > 0)) continue;
+          tags.push(tr);
+          ctx.fillStyle = '#4B2D6E'; ctx.fillRect(tr[0], tr[1], tw, 15 * dpr);
+          ctx.fillStyle = '#fff'; ctx.fillText(tag, bx + 4 * dpr, by - 4 * dpr);
+        }
       }
       ctx.globalAlpha = 1;
-      lastPr = pr;
       if (!ready) { ready = true; swap(); }
     }
     // swap to the picture without clusters only once the canvas has drawn them
